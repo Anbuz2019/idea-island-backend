@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anbuz.infrastructure.persistent.dao.ITagDao">
+
+    <resultMap id="groupMap" type="com.anbuz.infrastructure.persistent.po.UserTagGroupPO">
+        <id property="id" column="id"/>
+        <result property="topicId" column="topic_id"/>
+        <result property="name" column="name"/>
+        <result property="color" column="color"/>
+        <result property="isExclusive" column="is_exclusive"/>
+        <result property="isRequired" column="is_required"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <resultMap id="valueMap" type="com.anbuz.infrastructure.persistent.po.UserTagValuePO">
+        <id property="id" column="id"/>
+        <result property="groupId" column="group_id"/>
+        <result property="value" column="value"/>
+        <result property="color" column="color"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <insert id="insertGroup" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_tag_group (topic_id, name, color, is_exclusive, is_required, sort_order, created_at, updated_at)
+        VALUES (#{topicId}, #{name}, #{color}, #{isExclusive}, #{isRequired}, #{sortOrder}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="updateGroup">
+        UPDATE user_tag_group
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="isExclusive != null">is_exclusive = #{isExclusive},</if>
+            <if test="isRequired != null">is_required = #{isRequired},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteGroupById">DELETE FROM user_tag_group WHERE id = #{id}</delete>
+
+    <select id="selectGroupById" resultMap="groupMap">
+        SELECT * FROM user_tag_group WHERE id = #{id}
+    </select>
+
+    <select id="selectGroupsByTopicId" resultMap="groupMap">
+        SELECT * FROM user_tag_group WHERE topic_id = #{topicId} ORDER BY sort_order, id
+    </select>
+
+    <select id="countGroupsByTopicId" resultType="int">
+        SELECT COUNT(1) FROM user_tag_group WHERE topic_id = #{topicId}
+    </select>
+
+    <select id="countGroupByTopicIdAndName" resultType="int">
+        SELECT COUNT(1) FROM user_tag_group WHERE topic_id = #{topicId} AND name = #{name}
+    </select>
+
+    <insert id="insertValue" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_tag_value (group_id, value, color, sort_order, created_at)
+        VALUES (#{groupId}, #{value}, #{color}, #{sortOrder}, #{createdAt})
+    </insert>
+
+    <update id="updateValue">
+        UPDATE user_tag_value
+        <set>
+            <if test="value != null">value = #{value},</if>
+            <if test="color != null">color = #{color},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteValueById">DELETE FROM user_tag_value WHERE id = #{id}</delete>
+
+    <select id="selectValueById" resultMap="valueMap">
+        SELECT * FROM user_tag_value WHERE id = #{id}
+    </select>
+
+    <select id="selectValuesByGroupId" resultMap="valueMap">
+        SELECT * FROM user_tag_value WHERE group_id = #{groupId} ORDER BY sort_order, id
+    </select>
+
+    <select id="countValuesByGroupId" resultType="int">
+        SELECT COUNT(1) FROM user_tag_value WHERE group_id = #{groupId}
+    </select>
+
+    <select id="countValueByGroupIdAndValue" resultType="int">
+        SELECT COUNT(1) FROM user_tag_value WHERE group_id = #{groupId} AND value = #{value}
+    </select>
+
+</mapper>

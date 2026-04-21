@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anbuz.infrastructure.persistent.dao.IUserDao">
+
+    <resultMap id="userMap" type="com.anbuz.infrastructure.persistent.po.UserPO">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="passwordHash" column="password_hash"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatarKey" column="avatar_key"/>
+        <result property="status" column="status"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `user` (username, email, phone, password_hash, nickname, avatar_key, status, created_at, updated_at)
+        VALUES (#{username}, #{email}, #{phone}, #{passwordHash}, #{nickname}, #{avatarKey}, #{status}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE `user`
+        <set>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatarKey != null">avatar_key = #{avatarKey},</if>
+            <if test="status != null">status = #{status},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="selectById" resultMap="userMap">
+        SELECT * FROM `user` WHERE id = #{id}
+    </select>
+
+    <select id="selectByEmail" resultMap="userMap">
+        SELECT * FROM `user` WHERE email = #{email} LIMIT 1
+    </select>
+
+    <select id="selectByPhone" resultMap="userMap">
+        SELECT * FROM `user` WHERE phone = #{phone} LIMIT 1
+    </select>
+
+    <select id="selectByUsername" resultMap="userMap">
+        SELECT * FROM `user` WHERE username = #{username} LIMIT 1
+    </select>
+
+    <select id="countByEmail" resultType="int">
+        SELECT COUNT(1) FROM `user` WHERE email = #{email}
+    </select>
+
+    <select id="countByPhone" resultType="int">
+        SELECT COUNT(1) FROM `user` WHERE phone = #{phone}
+    </select>
+
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(1) FROM `user` WHERE username = #{username}
+    </select>
+
+</mapper>

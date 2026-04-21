@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.anbuz.infrastructure.persistent.dao.IMaterialMetaDao">
+
+    <resultMap id="metaMap" type="com.anbuz.infrastructure.persistent.po.MaterialMetaPO">
+        <id property="id" column="id"/>
+        <result property="materialId" column="material_id"/>
+        <result property="author" column="author"/>
+        <result property="sourcePlatform" column="source_platform"/>
+        <result property="publishTime" column="publish_time"/>
+        <result property="wordCount" column="word_count"/>
+        <result property="durationSeconds" column="duration_seconds"/>
+        <result property="thumbnailKey" column="thumbnail_key"/>
+        <result property="extraJson" column="extra_json"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO material_meta (material_id, author, source_platform, publish_time,
+                                   word_count, duration_seconds, thumbnail_key, extra_json,
+                                   created_at, updated_at)
+        VALUES (#{materialId}, #{author}, #{sourcePlatform}, #{publishTime},
+                #{wordCount}, #{durationSeconds}, #{thumbnailKey}, #{extraJson},
+                #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE material_meta
+        <set>
+            <if test="author != null">author = #{author},</if>
+            <if test="sourcePlatform != null">source_platform = #{sourcePlatform},</if>
+            <if test="publishTime != null">publish_time = #{publishTime},</if>
+            <if test="wordCount != null">word_count = #{wordCount},</if>
+            <if test="durationSeconds != null">duration_seconds = #{durationSeconds},</if>
+            <if test="thumbnailKey != null">thumbnail_key = #{thumbnailKey},</if>
+            <if test="extraJson != null">extra_json = #{extraJson},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE material_id = #{materialId}
+    </update>
+
+    <select id="selectByMaterialId" resultMap="metaMap">
+        SELECT * FROM material_meta WHERE material_id = #{materialId}
+    </select>
+
+</mapper>

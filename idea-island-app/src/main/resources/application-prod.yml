@@ -1,40 +1,76 @@
 server:
   port: 8091
 
-# 线程池配置
-thread:
-  pool:
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true&allowPublicKeyRetrieval=true
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      pool-name: IdeaIslandHikari
+      minimum-idle: 10
+      maximum-pool-size: 30
+      idle-timeout: 30000
+      connection-timeout: 10000
+      max-lifetime: 1800000
+
+mybatis:
+  mapper-locations: classpath:/mybatis/mapper/*.xml
+  config-location: classpath:/mybatis/config/mybatis-config.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+redis:
+  sdk:
+    config:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
+      pool-size: 20
+      min-idle-size: 10
+      idle-timeout: 30000
+      connect-timeout: 5000
+      retry-attempts: 3
+      retry-interval: 1000
+      ping-interval: 60000
+      keep-alive: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expire-days: 7
+
+rocketmq:
+  name-server: ${ROCKETMQ_NAMESRV}
+  consumer:
+    group: idea-island-group
+    pull-batch-size: 10
+  producer:
+    group: idea-island-group
+    send-message-timeout: 10000
+    retry-times-when-send-failed: 2
+    retry-times-when-send-async-failed: 2
+
+xxl:
+  job:
+    access-token: ${XXL_JOB_ACCESS_TOKEN}
+    admin:
+      addresses: ${XXL_JOB_ADMIN_URL}
     executor:
-      config:
-        core-pool-size: 20
-        max-pool-size: 50
-        keep-alive-time: 5000
-        block-queue-size: 5000
-        policy: CallerRunsPolicy
+      appname: idea-island-executor
+      address:
+      ip:
+      port: 9999
+      logpath: /app/logs/xxl-job
+      logretentiondays: 30
 
-# 数据库配置
-#spring:
-#  datasource:
-#    username: root
-#    password: 123456
-#    url: jdbc:mysql://127.0.0.1:3306/xfg_frame_archetype?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true
-#    driver-class-name: com.mysql.cj.jdbc.Driver
-#  hikari:
-#    pool-name: Retail_HikariCP
-#    minimum-idle: 15 #最小空闲连接数量
-#    idle-timeout: 180000 #空闲连接存活最大时间，默认600000（10分钟）
-#    maximum-pool-size: 25 #连接池最大连接数，默认是10
-#    auto-commit: true  #此属性控制从池返回的连接的默认自动提交行为,默认值：true
-#    max-lifetime: 1800000 #此属性控制池中连接的最长生命周期，值0表示无限生命周期，默认1800000即30分钟
-#    connection-timeout: 30000 #数据库连接超时时间,默认30秒，即30000
-#    connection-test-query: SELECT 1
-#  type: com.zaxxer.hikari.HikariDataSource
+cos:
+  secret-id: ${COS_SECRET_ID}
+  secret-key: ${COS_SECRET_KEY}
+  bucket: ${COS_BUCKET}
+  region: ${COS_REGION}
+  presign-expire-minutes: 15
 
-#mybatis:
-#  mapper-locations: classpath:/mybatis/mapper/*.xml
-#  config-location:  classpath:/mybatis/config/mybatis-config.xml
-
-# 日志
 logging:
   level:
     root: info

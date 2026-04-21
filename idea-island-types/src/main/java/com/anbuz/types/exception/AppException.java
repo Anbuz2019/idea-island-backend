@@ -1,46 +1,28 @@
 package com.anbuz.types.exception;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import com.anbuz.types.model.ErrorCode;
+import lombok.Getter;
 
-@EqualsAndHashCode(callSuper = true)
-@Data
+@Getter
 public class AppException extends RuntimeException {
 
-    private static final long serialVersionUID = 5317680961212299217L;
+    private static final long serialVersionUID = 1L;
 
-    /** 异常码 */
-    private String code;
+    private final int code;
 
-    /** 异常信息 */
-    private String info;
-
-    public AppException(String code) {
-        this.code = code;
+    public AppException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.code = errorCode.getCode();
     }
 
-    public AppException(String code, Throwable cause) {
-        this.code = code;
-        super.initCause(cause);
+    public AppException(ErrorCode errorCode, String detail) {
+        super(detail);
+        this.code = errorCode.getCode();
     }
 
-    public AppException(String code, String message) {
-        this.code = code;
-        this.info = message;
-    }
-
-    public AppException(String code, String message, Throwable cause) {
-        this.code = code;
-        this.info = message;
-        super.initCause(cause);
-    }
-
-    @Override
-    public String toString() {
-        return "com.anbuz.x.api.types.exception.XApiException{" +
-                "code='" + code + '\'' +
-                ", info='" + info + '\'' +
-                '}';
+    public AppException(ErrorCode errorCode, Throwable cause) {
+        super(errorCode.getMessage(), cause);
+        this.code = errorCode.getCode();
     }
 
 }
