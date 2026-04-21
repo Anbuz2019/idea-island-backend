@@ -41,3 +41,10 @@ build/
 ### Secrets ###
 .env
 *.env.local
+
+### RocketMQ ###
+rocketmq/logs/
+rocketmq/store/
+
+### Design ###
+docs/design

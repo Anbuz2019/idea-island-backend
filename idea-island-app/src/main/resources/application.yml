@@ -1,11 +1,13 @@
 spring:
   profiles:
     active: @profileActive@
-  config:
-    import: "optional:nacos:idea-island-${spring.profiles.active}.yaml"
+#  config:
+#    import: "optional:nacos:idea-island-${spring.profiles.active}.yaml"
   cloud:
     nacos:
       config:
+        import-check:
+          enabled: false
         server-addr: ${NACOS_HOST:127.0.0.1}:${NACOS_PORT:8848}
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}

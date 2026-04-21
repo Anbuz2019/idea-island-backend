@@ -7,9 +7,10 @@ COPY idea-island-domain/pom.xml idea-island-domain/pom.xml
 COPY idea-island-infrastructure/pom.xml idea-island-infrastructure/pom.xml
 COPY idea-island-trigger/pom.xml idea-island-trigger/pom.xml
 COPY idea-island-app/pom.xml idea-island-app/pom.xml
-RUN mvn dependency:go-offline -q
+# RUN mvn dependency:go-offline -q
 COPY . .
-RUN mvn clean package -DskipTests -q
+RUN --mount=type=cache,target=/root/.m2,id=idea-island-m2 \
+        mvn -B -Dmaven.test.skip=true clean package
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

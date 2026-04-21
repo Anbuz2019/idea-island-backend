@@ -45,12 +45,12 @@ services:
       MODE: standalone
       NACOS_AUTH_ENABLE: "true"
       NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
-      SPRING_DATASOURCE_PLATFORM: mysql
-      MYSQL_SERVICE_HOST: mysql
-      MYSQL_SERVICE_PORT: 3306
-      MYSQL_SERVICE_DB_NAME: nacos
-      MYSQL_SERVICE_USER: ${DB_USERNAME}
-      MYSQL_SERVICE_PASSWORD: ${DB_PASSWORD}
+      # SPRING_DATASOURCE_PLATFORM: mysql
+      # MYSQL_SERVICE_HOST: mysql
+      # MYSQL_SERVICE_PORT: 3306
+      # MYSQL_SERVICE_DB_NAME: nacos
+      # MYSQL_SERVICE_USER: ${DB_USERNAME}
+      # MYSQL_SERVICE_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8848:8848"
       - "9848:9848"
@@ -66,21 +66,23 @@ services:
     ports:
       - "9876:9876"
     volumes:
-      - rocketmq_logs:/home/rocketmq/logs
+      - ./rocketmq/logs:/home/rocketmq/logs
 
   rocketmq-broker:
     image: apache/rocketmq:5.3.1
     container_name: idea-island-rocketmq-broker
     restart: unless-stopped
     command: sh mqbroker -n rocketmq-namesrv:9876
+    user: "3000:3000"
     ports:
       - "10909:10909"
       - "10911:10911"
     depends_on:
       - rocketmq-namesrv
     volumes:
-      - rocketmq_data:/home/rocketmq/store
-      - rocketmq_logs:/home/rocketmq/logs
+      - ./rocketmq/store:/home/rocketmq/store
+      - ./rocketmq/logs:/home/rocketmq/logs
+      - ./conf/broker.conf:/home/rocketmq/broker.conf
 
   xxl-job-admin:
     image: xuxueli/xxl-job-admin:2.4.1
@@ -88,7 +90,7 @@ services:
     restart: unless-stopped
     environment:
       PARAMS: >
-        --spring.datasource.url=jdbc:mysql://mysql:3306/${DB_NAME}?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
+        --spring.datasource.url=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai
         --spring.datasource.username=${DB_USERNAME}
         --spring.datasource.password=${DB_PASSWORD}
         --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN}
@@ -102,6 +104,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      cache_from:
+        - idea-island:1.0
     container_name: idea-island-app
     restart: unless-stopped
     env_file:
@@ -140,6 +144,4 @@ services:
 volumes:
   mysql_data:
   redis_data:
-  rocketmq_data:
-  rocketmq_logs:
   app_logs:

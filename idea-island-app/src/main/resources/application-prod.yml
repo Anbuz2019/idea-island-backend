@@ -17,7 +17,7 @@ spring:
 
 mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml
-  config-location: classpath:/mybatis/config/mybatis-config.xml
+#  config-location: classpath:/mybatis/config/mybatis-config.xml
   configuration:
     map-underscore-to-camel-case: true
 
@@ -53,7 +53,7 @@ rocketmq:
 
 xxl:
   job:
-    access-token: ${XXL_JOB_ACCESS_TOKEN}
+    accessToken: fXWGPYzLTB7uarFT0ZkJTd6i4jNd1DuQK2F9caNHnHU=
     admin:
       addresses: ${XXL_JOB_ADMIN_URL}
     executor:
@@ -75,3 +75,13 @@ logging:
   level:
     root: info
   config: classpath:logback-spring.xml
+
+management:
+  health:
+    discovery:
+      enabled: false
+  endpoints:
+    web:
+      exposure:
+        include: refresh,health,info
+      base-path: /actuator

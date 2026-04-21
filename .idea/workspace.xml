@@ -4,45 +4,43 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="534cd719-6a9a-4357-9256-d7f00543c7db" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.name" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-api/src/main/java/com/anbuz/api/IUserService.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-app/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/idea-island-app/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/adapter/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/model/aggregate/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/model/entity/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/model/valobj/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/repository/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/xxx/service/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/yyy/model/aggregate/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/yyy/model/entity/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/yyy/model/valobj/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/yyy/repository/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-domain/src/main/java/com/anbuz/domain/yyy/service/package-info.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/idea-island-trigger/src/main/java/com/anbuz/trigger/rpc/UserService.java" beforeDir="false" />
-    </list>
+    <list default="true" id="534cd719-6a9a-4357-9256-d7f00543c7db" name="Changes" comment="完成初次部署检查" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="159" />
+    <option name="cachedIndexableFilesCount" value="126" />
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Anbuz2019&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Anbuz2019/idea-island-backend.git&quot;,
+    &quot;accountId&quot;: &quot;997bd4ef-c13a-455b-872f-902547563adb&quot;
+  }
+}</component>
+  <component name="KubernetesApiPersistence">{}</component>
+  <component name="KubernetesApiProvider">{
+  &quot;isMigrated&quot;: true
+}</component>
   <component name="McpProjectServerCommands">
     <commands />
     <urls />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 7
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="3CelCAfVe2lMbr59JuwqktSksnE" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -50,20 +48,39 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Docker.Dockerfile.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.MCP Project settings loaded": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "D:/DESKTOP/idea-island/idea-island-backend/idea-island/docs/sql",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
     "project.structure.last.edited": "Modules",
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "settings.editor.selected.configurable": "configurable.group.appearance",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
   }
 }]]></component>
-  <component name="RunManager">
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\DESKTOP\idea-island\idea-island-backend\idea-island\docs\sql" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\DESKTOP\idea-island\idea-island-backend\idea-island" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Docker.Dockerfile">
     <configuration name="Application" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" temporary="true" nameIsGenerated="true">
       <module name="idea-island-app" />
       <option name="SPRING_BOOT_MAIN_CLASS" value="com.anbuz.Application" />
@@ -77,8 +94,23 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="Dockerfile" type="docker-deploy" factoryName="dockerfile" temporary="true" server-name="Docker">
+      <deployment type="dockerfile">
+        <settings>
+          <option name="sourceFilePath" value="Dockerfile" />
+        </settings>
+      </deployment>
+      <method v="2" />
+    </configuration>
+    <configuration default="true" type="docker-deploy" factoryName="dockerfile" temporary="true">
+      <deployment type="dockerfile">
+        <settings />
+      </deployment>
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Docker.Dockerfile" />
         <item itemvalue="Spring Boot.Application" />
       </list>
     </recent_temporary>
@@ -99,10 +131,49 @@
       <option name="presentableId" value="Default" />
       <updated>1776753788666</updated>
       <workItem from="1776753790878" duration="222000" />
+      <workItem from="1776767326773" duration="5613000" />
+      <workItem from="1776776544111" duration="399000" />
+      <workItem from="1776779999944" duration="67000" />
+      <workItem from="1776784593748" duration="4085000" />
+      <workItem from="1776792480651" duration="460000" />
+      <workItem from="1776823238376" duration="1588000" />
     </task>
+    <task id="LOCAL-00001" summary="完成初次部署检查">
+      <option name="closed" value="true" />
+      <created>1776792877493</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1776792877493</updated>
+    </task>
+    <task id="LOCAL-00002" summary="完成初次部署检查">
+      <option name="closed" value="true" />
+      <created>1776824730825</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1776824730825</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="解决编译问题" />
+    <MESSAGE value="完成初次部署检查" />
+    <option name="LAST_COMMIT_MESSAGE" value="完成初次部署检查" />
   </component>
 </project>
