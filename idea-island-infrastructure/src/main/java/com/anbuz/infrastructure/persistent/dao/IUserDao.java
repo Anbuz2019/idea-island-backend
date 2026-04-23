@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
+/**
+ * 用户 MyBatis Mapper，负责 user 表和用户维度统计查询。
+ */
 @Mapper
 public interface IUserDao {
 

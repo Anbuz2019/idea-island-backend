@@ -1,175 +1,200 @@
 package com.anbuz.trigger.http;
 
-import com.anbuz.domain.material.model.entity.Material;
-import com.anbuz.domain.material.model.entity.MaterialTag;
-import com.anbuz.domain.material.repository.IMaterialRepository;
-import com.anbuz.domain.material.service.StatusTransitionService;
-import com.anbuz.domain.material.service.SystemTagService;
-import com.anbuz.domain.topic.model.entity.Topic;
-import com.anbuz.domain.topic.service.TopicService;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.TypeReference;
+import com.anbuz.api.http.IMaterialController;
+import com.anbuz.domain.material.model.valobj.MaterialListQuery;
+import com.anbuz.domain.material.service.IMaterialService;
 import com.anbuz.trigger.auth.UserContext;
-import com.anbuz.types.enums.MaterialAction;
-import com.anbuz.types.enums.MaterialStatus;
-import com.anbuz.types.enums.MaterialType;
-import com.anbuz.types.enums.TagType;
 import com.anbuz.types.exception.AppException;
 import com.anbuz.types.model.ErrorCode;
 import com.anbuz.types.model.Result;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.DecimalMax;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * 资料 HTTP 适配器，负责把资料请求转换为资料域服务调用并组织 API 响应。
+ */
+@Slf4j
 @RestController
-@RequestMapping("/api/v1/materials")
 @RequiredArgsConstructor
-public class MaterialController {
+public class MaterialController implements IMaterialController {
 
-    private final IMaterialRepository materialRepository;
-    private final TopicService topicService;
-    private final StatusTransitionService statusTransitionService;
-    private final SystemTagService systemTagService;
+    private final IMaterialService materialService;
 
-    @PostMapping
+    @Override
+    public Result<MaterialPageResponse> list(@Valid ListMaterialsRequest request) {
+        Long userId = UserContext.currentUserId();
+        log.debug("List materials userId={} topicId={} page={} pageSize={}",
+                userId, request.getTopicId(), request.getPage(), request.getPageSize());
+        return Result.ok(MaterialApiMapper.toPageResponse(materialService.listMaterials(userId, MaterialListQuery.builder()
+                .topicId(request.getTopicId())
+                .statuses(request.getStatus())
+                .materialTypes(request.getMaterialType())
+                .scoreMin(request.getScoreMin())
+                .scoreMax(request.getScoreMax())
+                .createdStart(request.getCreatedStart())
+                .createdEnd(request.getCreatedEnd())
+                .keyword(request.getKeyword())
+                .sortBy(request.getSortBy())
+                .sortDirection(request.getSortDirection())
+                .tagFilters(parseTagFilters(request.getTagFilters()))
+                .page(request.getPage())
+                .pageSize(request.getPageSize())
+                .build())));
+    }
+
+    @Override
     public Result<Long> submit(@Valid @RequestBody SubmitRequest req) {
         Long userId = UserContext.currentUserId();
-        Topic topic = topicService.getTopic(req.getTopicId(), userId);
-        if (!topic.isEnabled()) {
-            throw new AppException(ErrorCode.BUSINESS_CONFLICT, "主题已停用，无法提交资料");
-        }
-        LocalDateTime now = LocalDateTime.now();
-        Material material = Material.builder()
-                .userId(userId)
+        log.info("Submit material requested userId={} topicId={} materialType={}",
+                userId, req.getTopicId(), req.getMaterialType());
+        Long materialId = materialService.submit(userId, IMaterialService.SubmitCommand.builder()
                 .topicId(req.getTopicId())
-                .materialType(MaterialType.of(req.getMaterialType()))
-                .status(MaterialStatus.INBOX)
+                .materialType(req.getMaterialType())
                 .title(req.getTitle())
                 .description(req.getDescription())
                 .rawContent(req.getRawContent())
                 .sourceUrl(req.getSourceUrl())
                 .fileKey(req.getFileKey())
-                .deleted(false)
-                .inboxAt(now)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-        Long materialId = materialRepository.saveMaterial(material);
+                .author(req.getAuthor())
+                .sourcePlatform(req.getSourcePlatform())
+                .publishTime(req.getPublishTime())
+                .durationSeconds(req.getDurationSeconds())
+                .thumbnailKey(req.getThumbnailKey())
+                .tags(toTagInputs(req.getTags()))
+                .build());
+        log.info("Submit material succeeded userId={} topicId={} materialId={}", userId, req.getTopicId(), materialId);
         return Result.ok(materialId);
     }
 
-    @GetMapping("/{id}")
-    public Result<Material> detail(@PathVariable Long id) {
+    @Override
+    public Result<MaterialDetailResponse> detail(@PathVariable Long id) {
         Long userId = UserContext.currentUserId();
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        if (!userId.equals(material.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
-        return Result.ok(material);
+        log.debug("Load material detail userId={} materialId={}", userId, id);
+        return Result.ok(MaterialApiMapper.toDetailResponse(materialService.getDetail(userId, id)));
     }
 
-    @PostMapping("/{id}/mark-read")
-    public Result<Void> markRead(@PathVariable Long id) {
-        statusTransitionService.transit(id, UserContext.currentUserId(), MaterialAction.MARK_READ, null, null, null);
+    @Override
+    public Result<MaterialDetailResponse> updateBasic(@PathVariable Long id, @Valid @RequestBody UpdateBasicRequest req) {
+        Long userId = UserContext.currentUserId();
+        log.info("Update material basic requested userId={} materialId={} titleChanged={} contentChanged={} sourceUrlChanged={}",
+                userId, id, req.getTitle() != null, req.getRawContent() != null, req.getSourceUrl() != null);
+        MaterialDetailResponse response = MaterialApiMapper.toDetailResponse(materialService.updateBasic(userId, id,
+                IMaterialService.UpdateBasicCommand.builder()
+                        .title(req.getTitle())
+                        .rawContent(req.getRawContent())
+                        .sourceUrl(req.getSourceUrl())
+                        .build()));
+        log.info("Update material basic succeeded userId={} materialId={}", userId, id);
+        return Result.ok(response);
+    }
+
+    @Override
+    public Result<MaterialDetailResponse> updateMeta(@PathVariable Long id, @Valid @RequestBody UpdateMetaRequest req) {
+        Long userId = UserContext.currentUserId();
+        log.info("Update material meta requested userId={} materialId={} authorChanged={} platformChanged={} publishTimeChanged={} wordCountChanged={} durationChanged={} thumbnailChanged={} extraJsonChanged={}",
+                userId, id, req.getAuthor() != null, req.getSourcePlatform() != null, req.getPublishTime() != null,
+                req.getWordCount() != null, req.getDurationSeconds() != null, req.getThumbnailKey() != null, req.getExtraJson() != null);
+        MaterialDetailResponse response = MaterialApiMapper.toDetailResponse(materialService.updateMeta(userId, id,
+                IMaterialService.UpdateMetaCommand.builder()
+                        .author(req.getAuthor())
+                        .sourcePlatform(req.getSourcePlatform())
+                        .publishTime(req.getPublishTime())
+                        .wordCount(req.getWordCount())
+                        .durationSeconds(req.getDurationSeconds())
+                        .thumbnailKey(req.getThumbnailKey())
+                        .extraJson(req.getExtraJson())
+                        .build()));
+        log.info("Update material meta succeeded userId={} materialId={}", userId, id);
+        return Result.ok(response);
+    }
+
+    @Override
+    public Result<Void> delete(@PathVariable Long id) {
+        Long userId = UserContext.currentUserId();
+        materialService.deleteMaterial(userId, id);
+        log.info("Delete material succeeded userId={} materialId={}", userId, id);
         return Result.ok();
     }
 
-    @PostMapping("/{id}/collect")
+    @Override
+    public Result<Void> markRead(@PathVariable Long id) {
+        Long userId = UserContext.currentUserId();
+        materialService.markRead(userId, id);
+        log.info("Mark material read succeeded userId={} materialId={}", userId, id);
+        return Result.ok();
+    }
+
+    @Override
     public Result<Void> collect(@PathVariable Long id, @Valid @RequestBody CollectRequest req) {
         Long userId = UserContext.currentUserId();
-        Material updated = statusTransitionService.transit(id, userId, MaterialAction.COLLECT,
-                req.getComment(), req.getScore(), null);
-        systemTagService.refreshSystemTags(id, updated.getScore(), updated.getComment());
+        materialService.collect(userId, id, req.getComment(), req.getScore());
+        log.info("Collect material succeeded userId={} materialId={} score={}", userId, id, req.getScore());
         return Result.ok();
     }
 
-    @PostMapping("/{id}/archive")
+    @Override
     public Result<Void> archive(@PathVariable Long id) {
-        statusTransitionService.transit(id, UserContext.currentUserId(), MaterialAction.ARCHIVE, null, null, null);
+        Long userId = UserContext.currentUserId();
+        materialService.archive(userId, id);
+        log.info("Archive material succeeded userId={} materialId={}", userId, id);
         return Result.ok();
     }
 
-    @PostMapping("/{id}/invalidate")
+    @Override
     public Result<Void> invalidate(@PathVariable Long id, @Valid @RequestBody InvalidateRequest req) {
-        statusTransitionService.transit(id, UserContext.currentUserId(), MaterialAction.INVALIDATE,
-                null, null, req.getInvalidReason());
+        Long userId = UserContext.currentUserId();
+        materialService.invalidate(userId, id, req.getInvalidReason());
+        log.info("Invalidate material succeeded userId={} materialId={} reason={}", userId, id, req.getInvalidReason());
         return Result.ok();
     }
 
-    @PostMapping("/{id}/restore")
+    @Override
     public Result<Void> restore(@PathVariable Long id) {
-        statusTransitionService.transit(id, UserContext.currentUserId(), MaterialAction.RESTORE, null, null, null);
+        Long userId = UserContext.currentUserId();
+        materialService.restore(userId, id);
+        log.info("Restore material to inbox succeeded userId={} materialId={}", userId, id);
         return Result.ok();
     }
 
-    @PostMapping("/{id}/restore-collected")
+    @Override
     public Result<Void> restoreCollected(@PathVariable Long id) {
-        statusTransitionService.transit(id, UserContext.currentUserId(), MaterialAction.RESTORE_COLLECTED, null, null, null);
+        Long userId = UserContext.currentUserId();
+        materialService.restoreCollected(userId, id);
+        log.info("Restore material to collected succeeded userId={} materialId={}", userId, id);
         return Result.ok();
     }
 
-    @PutMapping("/{id}/tags")
+    @Override
     public Result<Void> updateTags(@PathVariable Long id, @Valid @RequestBody UpdateTagsRequest req) {
         Long userId = UserContext.currentUserId();
-        Material material = materialRepository.findById(id)
-                .orElseThrow(() -> new AppException(ErrorCode.NOT_FOUND));
-        if (!userId.equals(material.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
-
-        materialRepository.deleteUserTags(id);
-        if (req.getTags() != null && !req.getTags().isEmpty()) {
-            LocalDateTime now = LocalDateTime.now();
-            List<MaterialTag> tags = req.getTags().stream()
-                    .map(t -> MaterialTag.builder()
-                            .materialId(id)
-                            .tagType(TagType.USER)
-                            .tagGroupKey(t.getTagGroupKey())
-                            .tagValue(t.getTagValue())
-                            .createdAt(now)
-                            .build())
-                    .toList();
-            materialRepository.saveTags(tags);
-        }
-        systemTagService.refreshSystemTags(id, material.getScore(), material.getComment());
+        materialService.updateTags(userId, id, toTagInputs(req.getTags()));
+        log.info("Update material tags succeeded userId={} materialId={} tagCount={}",
+                userId, id, req.getTags() == null ? 0 : req.getTags().size());
         return Result.ok();
     }
 
-    @Data
-    public static class SubmitRequest {
-        @NotNull private Long topicId;
-        @NotBlank private String materialType;
-        private String title;
-        private String description;
-        private String rawContent;
-        private String sourceUrl;
-        private String fileKey;
+    private List<IMaterialService.TagInput> toTagInputs(List<UpdateTagsRequest.TagItem> tags) {
+        return tags == null ? List.of() : tags.stream()
+                .map(tag -> new IMaterialService.TagInput(tag.getTagGroupKey(), tag.getTagValue()))
+                .toList();
     }
 
-    @Data
-    public static class CollectRequest {
-        @NotBlank private String comment;
-        @NotNull @DecimalMin("0.0") @DecimalMax("10.0") private BigDecimal score;
-    }
-
-    @Data
-    public static class InvalidateRequest {
-        @NotBlank private String invalidReason;
-    }
-
-    @Data
-    public static class UpdateTagsRequest {
-        private List<TagItem> tags;
-
-        @Data
-        public static class TagItem {
-            @NotBlank private String tagGroupKey;
-            @NotBlank private String tagValue;
+    private List<MaterialListQuery.TagFilter> parseTagFilters(String tagFilters) {
+        if (tagFilters == null || tagFilters.isBlank()) {
+            return null;
+        }
+        try {
+            return JSON.parseObject(tagFilters, new TypeReference<>() {});
+        } catch (Exception e) {
+            throw new AppException(ErrorCode.PARAM_INVALID, "tagFilters 格式非法");
         }
     }
-
 }

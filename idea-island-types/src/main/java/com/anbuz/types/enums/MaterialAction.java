@@ -3,6 +3,9 @@ package com.anbuz.types.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 资料动作枚举，负责定义驱动资料状态流转的用户或系统动作。
+ */
 @Getter
 @AllArgsConstructor
 public enum MaterialAction {

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
+/**
+ * 统一响应模型，负责承载 Controller 返回给前端的成功或失败结果。
+ */
 @Data
 @Builder
 @NoArgsConstructor

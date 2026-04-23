@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 主题实体，负责表达用户资料集合的配置、状态和默认管理规则。
+ */
 @Data
 @Builder
 @NoArgsConstructor

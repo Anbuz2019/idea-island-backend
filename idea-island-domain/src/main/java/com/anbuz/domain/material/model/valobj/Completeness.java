@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.util.List;
 
+/**
+ * 完整度值对象，负责把资料补充信息映射为系统完整度标签。
+ */
 @Getter
 @AllArgsConstructor
 public enum Completeness {

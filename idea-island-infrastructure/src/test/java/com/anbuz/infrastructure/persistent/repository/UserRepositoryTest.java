@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @ActiveProfiles("test")
 @Import(UserRepository.class)
-@DisplayName("UserRepository H2 集成测试")
+@DisplayName("UserRepository H2 integration tests")
 class UserRepositoryTest {
 
     @Autowired
@@ -29,70 +29,94 @@ class UserRepositoryTest {
     private IUserDao userDao;
 
     @Nested
-    @DisplayName("保存用户")
+    @DisplayName("save user")
     class SaveUser {
 
         @Test
-        @DisplayName("保存用户后可按邮箱查询到")
-        void givenNewUser_whenSave_thenCanFindByEmail() {
-            User user = buildUser("test@example.com");
+        @DisplayName("assigns a generated id and supports lookup by email")
+        void givenNewUser_whenSave_thenGeneratedIdAndEmailLookupAreAvailable() {
+            User user = buildUser("email-user", "test@example.com", null);
 
             userRepository.save(user);
 
+            assertThat(user).extracting(User::getId).isNotNull();
             assertThat(userRepository.findByEmail("test@example.com"))
-                    .isPresent()
-                    .get()
-                    .satisfies(u -> {
-                        assertThat(u.getEmail()).isEqualTo("test@example.com");
-                        assertThat(u.getNickname()).isEqualTo("测试");
-                        assertThat(u.getStatus()).isEqualTo(1);
-                    });
+                    .hasValueSatisfying(saved -> assertThat(saved)
+                            .extracting(User::getEmail, User::getNickname, User::getStatus)
+                            .containsExactly("test@example.com", "tester", 1));
         }
 
         @Test
-        @DisplayName("邮箱存在性检查返回正确结果")
-        void givenExistingEmail_whenCheckExists_thenReturnsTrue() {
-            userRepository.save(buildUser("exists@example.com"));
+        @DisplayName("supports lookup by phone after save")
+        void givenPhoneUser_whenSave_thenCanFindByPhone() {
+            userRepository.save(buildUser("phone-user", null, "13800138000"));
 
-            assertThat(userRepository.existsByEmail("exists@example.com")).isTrue();
-            assertThat(userRepository.existsByEmail("notexists@example.com")).isFalse();
+            assertThat(userRepository.findByPhone("13800138000"))
+                    .hasValueSatisfying(saved -> assertThat(saved)
+                            .extracting(User::getUsername)
+                            .isEqualTo("phone-user"));
+        }
+
+        @Test
+        @DisplayName("supports lookup by username after save")
+        void givenNamedUser_whenSave_thenCanFindByUsername() {
+            userRepository.save(buildUser("named-user", "named@example.com", null));
+
+            assertThat(userRepository.findByUsername("named-user"))
+                    .hasValueSatisfying(saved -> assertThat(saved)
+                            .extracting(User::getEmail)
+                            .isEqualTo("named@example.com"));
+        }
+
+        @Test
+        @DisplayName("reports email, phone, and username existence correctly")
+        void givenSavedUsers_whenCheckExists_thenReturnsExpectedFlags() {
+            userRepository.save(buildUser("exists-user", "exists@example.com", "13800138001"));
+
+            assertThat(userRepository)
+                    .returns(true, repository -> repository.existsByEmail("exists@example.com"))
+                    .returns(true, repository -> repository.existsByPhone("13800138001"))
+                    .returns(true, repository -> repository.existsByUsername("exists-user"))
+                    .returns(false, repository -> repository.existsByEmail("missing@example.com"))
+                    .returns(false, repository -> repository.existsByPhone("13800139999"))
+                    .returns(false, repository -> repository.existsByUsername("missing-user"));
         }
     }
 
     @Nested
-    @DisplayName("更新用户")
+    @DisplayName("update user")
     class UpdateUser {
 
         @Test
-        @DisplayName("更新昵称后查询到新昵称")
-        void givenSavedUser_whenUpdateNickname_thenNewNicknameReturned() {
-            User user = buildUser("update@example.com");
+        @DisplayName("updates nickname and avatar and persists the changes")
+        void givenSavedUser_whenUpdate_thenNewValuesAreReturned() {
+            User user = buildUser("update-user", "update@example.com", null);
             userRepository.save(user);
 
             User saved = userRepository.findByEmail("update@example.com").orElseThrow();
-            saved.setNickname("新昵称");
+            saved.setNickname("new-nickname");
+            saved.setAvatarKey("avatar-key");
             saved.setUpdatedAt(LocalDateTime.now());
             userRepository.update(saved);
 
             assertThat(userRepository.findById(saved.getId()))
-                    .isPresent()
-                    .get()
-                    .extracting(User::getNickname)
-                    .isEqualTo("新昵称");
+                    .hasValueSatisfying(found -> assertThat(found)
+                            .extracting(User::getNickname, User::getAvatarKey)
+                            .containsExactly("new-nickname", "avatar-key"));
         }
     }
 
-    private User buildUser(String email) {
+    private User buildUser(String username, String email, String phone) {
         LocalDateTime now = LocalDateTime.now();
         return User.builder()
-                .username(email)
+                .username(username)
                 .email(email)
+                .phone(phone)
                 .passwordHash("hashed")
-                .nickname("测试")
+                .nickname("tester")
                 .status(1)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
     }
-
 }

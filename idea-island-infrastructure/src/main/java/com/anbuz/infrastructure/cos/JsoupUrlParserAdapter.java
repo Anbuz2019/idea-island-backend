@@ -8,6 +8,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 
+/**
+ * Jsoup URL 解析适配器，负责从网页 HTML 中提取 OG 标题和封面图。
+ */
 @Slf4j
 @Component
 public class JsoupUrlParserAdapter implements IUrlParserAdapter {

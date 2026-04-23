@@ -13,9 +13,14 @@ thread:
         policy: CallerRunsPolicy
 
 spring:
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      password: ${REDIS_PASSWORD:}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:idea_island}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/${DB_NAME:idea_island}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
     hikari:
@@ -28,7 +33,7 @@ spring:
 
 mybatis:
   mapper-locations: classpath:/mybatis/mapper/*.xml
-  config-location: classpath:/mybatis/config/mybatis-config.xml
+#  config-location: classpath:/mybatis/config/mybatis-config.xml
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -54,9 +59,25 @@ jwt:
   secret: ${JWT_SECRET:}
   expire-days: 7
 
+auth:
+  phone-code:
+    ttl-minutes: 5
+    expose-code: true
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
 # RocketMQ
 rocketmq:
-  name-server: ${ROCKETMQ_NAMESRV:127.0.0.1:9876}
+  name-server: 127.0.0.1:9876
   consumer:
     group: idea-island-group
     pull-batch-size: 10
@@ -69,9 +90,9 @@ rocketmq:
 # XXL-Job
 xxl:
   job:
-    accessToken: ${XXL_JOB_ACCESS_TOKEN:default_token}
+    accessToken: fXWGPYzLTB7uarFT0ZkJTd6i4jNd1DuQK2F9caNHnHU=
     admin:
-      addresses: ${XXL_JOB_ADMIN_URL:http://127.0.0.1:9090/xxl-job-admin}
+      addresses: http://127.0.0.1:9090/xxl-job-admin
     executor:
       appname: idea-island-executor
       address:
@@ -86,7 +107,7 @@ cos:
   secret-key: ${COS_SECRET_KEY:}
   bucket: ${COS_BUCKET:}
   region: ${COS_REGION:}
-  presign-expire-minutes: 15
+  base-url: ${COS_BASE_URL:}
 
 # 日志
 logging:

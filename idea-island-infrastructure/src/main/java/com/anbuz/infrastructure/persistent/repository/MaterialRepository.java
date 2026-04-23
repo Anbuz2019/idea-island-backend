@@ -3,6 +3,7 @@ package com.anbuz.infrastructure.persistent.repository;
 import com.anbuz.domain.material.model.entity.Material;
 import com.anbuz.domain.material.model.entity.MaterialMeta;
 import com.anbuz.domain.material.model.entity.MaterialTag;
+import com.anbuz.domain.material.model.valobj.MaterialListQuery;
 import com.anbuz.domain.material.repository.IMaterialRepository;
 import com.anbuz.infrastructure.persistent.dao.IMaterialDao;
 import com.anbuz.infrastructure.persistent.dao.IMaterialMetaDao;
@@ -10,17 +11,26 @@ import com.anbuz.infrastructure.persistent.dao.IMaterialTagDao;
 import com.anbuz.infrastructure.persistent.po.MaterialMetaPO;
 import com.anbuz.infrastructure.persistent.po.MaterialPO;
 import com.anbuz.infrastructure.persistent.po.MaterialTagPO;
+import com.anbuz.types.exception.AppException;
+import com.anbuz.types.model.ErrorCode;
 import com.anbuz.types.enums.MaterialStatus;
 import com.anbuz.types.enums.MaterialType;
 import com.anbuz.types.enums.TagType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * 资料仓储实现，负责把资料聚合读写转换为 MyBatis 持久化操作。
+ */
 @Repository
 @RequiredArgsConstructor
 public class MaterialRepository implements IMaterialRepository {
@@ -47,6 +57,16 @@ public class MaterialRepository implements IMaterialRepository {
     }
 
     @Override
+    public void clearInvalidation(Long materialId, LocalDateTime updatedAt) {
+        materialDao.clearInvalidation(materialId, updatedAt);
+    }
+
+    @Override
+    public void clearArchivedAt(Long materialId, LocalDateTime updatedAt) {
+        materialDao.clearArchivedAt(materialId, updatedAt);
+    }
+
+    @Override
     public void saveMeta(MaterialMeta meta) {
         materialMetaDao.insert(toMetaPO(meta));
     }
@@ -69,7 +89,11 @@ public class MaterialRepository implements IMaterialRepository {
     @Override
     public void saveTags(List<MaterialTag> tags) {
         if (tags == null || tags.isEmpty()) return;
-        materialTagDao.insertBatch(tags.stream().map(this::toTagPO).collect(Collectors.toList()));
+        try {
+            materialTagDao.insertBatch(tags.stream().map(this::toTagPO).collect(Collectors.toList()));
+        } catch (DuplicateKeyException e) {
+            throw new AppException(ErrorCode.BUSINESS_CONFLICT, "duplicate material tags");
+        }
     }
 
     @Override
@@ -87,6 +111,43 @@ public class MaterialRepository implements IMaterialRepository {
     @Override
     public void deleteTagByMaterialIdAndGroupKey(Long materialId, String tagGroupKey) {
         materialTagDao.deleteByMaterialIdAndGroupKey(materialId, tagGroupKey);
+    }
+
+    @Override
+    public List<Material> queryMaterials(MaterialListQuery query) {
+        return materialDao.selectByQuery(query).stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public long countMaterials(MaterialListQuery query) {
+        return materialDao.countByQuery(query);
+    }
+
+    @Override
+    public Map<String, Long> countByStatus(Long userId, Long topicId) {
+        Map<String, Long> result = new LinkedHashMap<>();
+        materialDao.countByStatus(userId, topicId).forEach(item -> result.put(item.getName(), item.getCount()));
+        return result;
+    }
+
+    @Override
+    public Map<String, Long> countByMaterialType(Long topicId) {
+        Map<String, Long> result = new LinkedHashMap<>();
+        materialDao.countByMaterialType(topicId).forEach(item -> result.put(item.getName(), item.getCount()));
+        return result;
+    }
+
+    @Override
+    public BigDecimal averageScoreByTopicId(Long topicId) {
+        return materialDao.averageScoreByTopicId(topicId);
+    }
+
+    @Override
+    public void updateLastRetrievedAt(List<Long> materialIds, LocalDateTime retrievedAt) {
+        if (materialIds == null || materialIds.isEmpty()) {
+            return;
+        }
+        materialDao.updateLastRetrievedAt(materialIds, retrievedAt);
     }
 
     @Override

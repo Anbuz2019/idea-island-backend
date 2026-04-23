@@ -2,6 +2,7 @@ package com.anbuz.domain.material.service;
 
 import com.anbuz.domain.material.model.entity.Material;
 import com.anbuz.domain.material.repository.IMaterialRepository;
+import com.anbuz.domain.material.service.impl.StatusTransitionService;
 import com.anbuz.types.enums.MaterialAction;
 import com.anbuz.types.enums.MaterialStatus;
 import com.anbuz.types.exception.AppException;
@@ -172,6 +173,28 @@ class StatusTransitionServiceTest {
             assertThat(result.getStatus()).isEqualTo(MaterialStatus.INBOX);
             assertThat(result.getInvalidReason()).isNull();
             assertThat(result.getInboxAt()).isNotNull();
+            verify(materialRepository).clearInvalidation(eq(MATERIAL_ID), any(LocalDateTime.class));
+        }
+    }
+
+    @Nested
+    @DisplayName("restore collected")
+    class RestoreCollected {
+
+        @Test
+        @DisplayName("clears archivedAt after restoring an archived material back to collected")
+        void givenArchivedMaterial_whenRestoreCollected_thenClearsArchivedAt() {
+            Material material = buildMaterial(MaterialStatus.ARCHIVED);
+            material.setArchivedAt(LocalDateTime.now().minusHours(2));
+            when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
+
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.RESTORE_COLLECTED, null, null, null);
+
+            assertThat(result)
+                    .returns(MaterialStatus.COLLECTED, Material::getStatus)
+                    .returns(null, Material::getArchivedAt);
+            verify(materialRepository).clearArchivedAt(eq(MATERIAL_ID), any(LocalDateTime.class));
         }
     }
 

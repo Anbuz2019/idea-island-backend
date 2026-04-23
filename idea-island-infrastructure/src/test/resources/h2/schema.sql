@@ -43,10 +43,21 @@ CREATE TABLE IF NOT EXISTS user_tag_value
 (
     id         BIGINT AUTO_INCREMENT PRIMARY KEY,
     group_id   BIGINT      NOT NULL,
-    value      VARCHAR(50) NOT NULL,
+    `value`    VARCHAR(50) NOT NULL,
     color      VARCHAR(7),
     sort_order INT         NOT NULL DEFAULT 0,
     created_at DATETIME    NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS topic_auto_invalid_rule
+(
+    id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+    topic_id       BIGINT      NOT NULL,
+    rule_type      VARCHAR(30) NOT NULL,
+    threshold_days INT         NOT NULL,
+    is_enabled     TINYINT     NOT NULL DEFAULT 1,
+    created_at     DATETIME    NOT NULL,
+    updated_at     DATETIME    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS material

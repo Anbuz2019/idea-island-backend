@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+/**
+ * 资料标签 MyBatis Mapper，负责 material_tag 表的读写和标签过滤。
+ */
 @Mapper
 public interface IMaterialTagDao {
 

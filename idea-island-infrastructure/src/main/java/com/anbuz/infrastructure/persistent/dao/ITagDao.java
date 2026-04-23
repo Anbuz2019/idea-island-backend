@@ -8,6 +8,9 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 标签 MyBatis Mapper，负责主题标签组和值的持久化读写。
+ */
 @Mapper
 public interface ITagDao {
 
@@ -38,5 +41,19 @@ public interface ITagDao {
     int countValuesByGroupId(@Param("groupId") Long groupId);
 
     int countValueByGroupIdAndValue(@Param("groupId") Long groupId, @Param("value") String value);
+
+    long countMaterialReferencesByGroupKey(@Param("groupKey") String groupKey);
+
+    long countMaterialReferencesByGroupKeyAndValue(@Param("groupKey") String groupKey, @Param("value") String value);
+
+    int countMaterialsWithMultipleValuesInGroup(@Param("groupKey") String groupKey);
+
+    void updateMaterialTagValue(@Param("groupKey") String groupKey,
+                                @Param("oldValue") String oldValue,
+                                @Param("newValue") String newValue);
+
+    List<Long> selectRequiredGroupIdsByTopicId(@Param("topicId") Long topicId);
+
+    void deleteValuesByGroupId(@Param("groupId") Long groupId);
 
 }

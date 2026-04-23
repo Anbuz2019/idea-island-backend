@@ -1,5 +1,8 @@
 package com.anbuz.trigger.auth;
 
+/**
+ * 用户上下文，负责在一次请求链路中保存和读取当前登录用户 ID。
+ */
 public class UserContext {
 
     private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用户标签组实体，负责表达主题下自定义标签维度的配置。
+ */
 @Data
 @Builder
 @NoArgsConstructor

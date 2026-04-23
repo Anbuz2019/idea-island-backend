@@ -2,6 +2,11 @@ server:
   port: 8091
 
 spring:
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST}:${DB_PORT}/${DB_NAME}?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=UTC&useSSL=true&allowPublicKeyRetrieval=true
@@ -40,6 +45,20 @@ jwt:
   secret: ${JWT_SECRET}
   expire-days: 7
 
+auth:
+  phone-code:
+    ttl-minutes: 5
+    expose-code: false
+
+knife4j:
+  enable: false
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
 rocketmq:
   name-server: ${ROCKETMQ_NAMESRV}
   consumer:
@@ -53,7 +72,7 @@ rocketmq:
 
 xxl:
   job:
-    accessToken: fXWGPYzLTB7uarFT0ZkJTd6i4jNd1DuQK2F9caNHnHU=
+    accessToken: ${XXL_JOB_ACCESS_TOKEN}
     admin:
       addresses: ${XXL_JOB_ADMIN_URL}
     executor:
@@ -69,7 +88,7 @@ cos:
   secret-key: ${COS_SECRET_KEY}
   bucket: ${COS_BUCKET}
   region: ${COS_REGION}
-  presign-expire-minutes: 15
+  base-url: ${COS_BASE_URL:}
 
 logging:
   level:

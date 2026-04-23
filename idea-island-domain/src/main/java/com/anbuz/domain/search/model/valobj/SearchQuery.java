@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+/**
+ * 搜索查询对象，负责承载跨资料检索的关键词、过滤条件和分页信息。
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -6,6 +6,9 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
+/**
+ * 资料元信息 MyBatis Mapper，负责 material_meta 表的读写。
+ */
 @Mapper
 public interface IMaterialMetaDao {
 

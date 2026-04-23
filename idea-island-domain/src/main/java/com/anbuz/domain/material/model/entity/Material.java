@@ -10,6 +10,9 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+/**
+ * 资料实体，负责表达用户沉淀内容的主体状态和生命周期字段。
+ */
 @Data
 @Builder
 @NoArgsConstructor

@@ -6,6 +6,9 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Web 配置，负责注册 HTTP 链路中的认证过滤器。
+ */
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig {

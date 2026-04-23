@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 内容解析结果，负责承载外部链接解析得到的标题、摘要和封面候选信息。
+ */
 @Data
 @Builder
 @NoArgsConstructor

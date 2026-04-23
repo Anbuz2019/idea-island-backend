@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 用户实体，负责表达账号身份、登录凭据和个人资料状态。
+ */
 @Data
 @Builder
 @NoArgsConstructor

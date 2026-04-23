@@ -16,12 +16,7 @@ FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 COPY --from=builder /app/idea-island-app/target/idea-island-app.jar app.jar
-RUN mkdir -p /app/logs && chown -R appuser:appgroup /app
+RUN mkdir -p /app/logs /app/data/log && chown -R appuser:appgroup /app
 USER appuser
 EXPOSE 8091
-ENTRYPOINT ["java", \
-  "-Xms512m", "-Xmx512m", \
-  "-XX:+UseG1GC", \
-  "-Dfile.encoding=UTF-8", \
-  "-Dspring.profiles.active=prod", \
-  "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "exec java ${JAVA_OPTS:--Xms256m -Xmx256m -XX:+UseG1GC -Dfile.encoding=UTF-8 -Dspring.profiles.active=prod} -jar app.jar"]

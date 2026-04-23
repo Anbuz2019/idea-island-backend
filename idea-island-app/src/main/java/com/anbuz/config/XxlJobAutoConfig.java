@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * XXL-JOB 配置，负责在启用调度时注册自动失效任务执行器。
+ */
 @Slf4j
 @Configuration
 public class XxlJobAutoConfig {

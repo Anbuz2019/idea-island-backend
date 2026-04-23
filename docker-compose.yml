@@ -13,7 +13,8 @@ services:
       MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./docs/sql/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./docs/sql/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./docs/sql/tables_xxl_job.sql:/docker-entrypoint-initdb.d/02-xxl-job.sql:ro
     ports:
       - "3306:3306"
     healthcheck:
@@ -72,8 +73,7 @@ services:
     image: apache/rocketmq:5.3.1
     container_name: idea-island-rocketmq-broker
     restart: unless-stopped
-    command: sh mqbroker -n rocketmq-namesrv:9876
-    user: "3000:3000"
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
     ports:
       - "10909:10909"
       - "10911:10911"
@@ -82,7 +82,7 @@ services:
     volumes:
       - ./rocketmq/store:/home/rocketmq/store
       - ./rocketmq/logs:/home/rocketmq/logs
-      - ./conf/broker.conf:/home/rocketmq/broker.conf
+      - ./conf/broker.conf:/home/rocketmq/broker.conf:ro
 
   xxl-job-admin:
     image: xuxueli/xxl-job-admin:2.4.1
@@ -129,6 +129,7 @@ services:
         condition: service_started
     volumes:
       - app_logs:/app/logs
+      - app_data_logs:/app/data/log
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8091/actuator/health || exit 1"]
       interval: 30s
@@ -145,3 +146,4 @@ volumes:
   mysql_data:
   redis_data:
   app_logs:
+  app_data_logs:

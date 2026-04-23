@@ -5,6 +5,9 @@ import lombok.Getter;
 
 import java.math.BigDecimal;
 
+/**
+ * 评分区间值对象，负责把用户评分映射为系统评分区间标签。
+ */
 @Getter
 @AllArgsConstructor
 public enum ScoreRange {

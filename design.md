@@ -209,10 +209,13 @@ AutoInvalidJobHandler（每天凌晨 2:00）
 
 ## 8. 文件上传方案
 
-- 客户端先调用 `/api/v1/files/presign` 获取预签名上传 URL
-- 客户端直接 PUT 到 OSS，不经过后端服务器
-- 上传完成后将 `file_key` 随业务接口一起提交
-- 封面图用户主动上传时走同一方案，后端异步生成封面时由 content 领域直接写 OSS
+- 客户端调用 `/api/v1/files/upload`，由后端接收 multipart 文件并上传到对象存储
+- 后端生成唯一 `fileKey`，直接作为对象名上传到云存储
+- 业务表仅保存 `fileKey`，例如 `material.file_key`、`material_meta.thumbnail_key`、`user.avatar_key`
+- 前端需要展示文件时，调用 `/api/v1/files/resolve?fileKey=...`，后端直接根据 `fileKey` 拼接访问地址返回
+- 文件访问地址优先使用配置项 `cos.base-url`；未配置时调用 COS SDK `getObjectUrl(bucket, fileKey)` 生成默认对象地址，避免手工拼接域名与云存储真实地址不一致
+- 后端会校验 MIME 和大小限制，不再额外维护 `fileKey -> url` 映射关系表
+- 后端异步生成的封面也使用同一套 `fileKey` 规则，保证 `thumbnailKey` 可直接解析
 
 ---
 

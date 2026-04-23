@@ -3,6 +3,9 @@ package com.anbuz.types.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 资料类型枚举，负责定义文章、链接、图片、媒体等内容分类。
+ */
 @Getter
 @AllArgsConstructor
 public enum MaterialType {

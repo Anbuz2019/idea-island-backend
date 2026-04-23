@@ -4,6 +4,9 @@ import com.anbuz.domain.user.model.entity.User;
 
 import java.util.Optional;
 
+/**
+ * 用户仓储接口，负责为用户领域提供账号、资料和统计的持久化能力。
+ */
 public interface IUserRepository {
 
     void save(User user);

@@ -1,76 +1,98 @@
 package com.anbuz.trigger.http;
 
+import com.anbuz.api.http.ITopicController;
 import com.anbuz.domain.topic.model.entity.Topic;
-import com.anbuz.domain.topic.service.TagSetService;
-import com.anbuz.domain.topic.service.TopicService;
+import com.anbuz.domain.topic.model.valobj.TopicStats;
+import com.anbuz.domain.topic.service.ITopicService;
 import com.anbuz.trigger.auth.UserContext;
 import com.anbuz.types.model.Result;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 主题 HTTP 适配器，负责把主题管理请求转换为主题域服务调用。
+ */
+@Slf4j
 @RestController
-@RequestMapping("/api/v1/topics")
 @RequiredArgsConstructor
-public class TopicController {
+public class TopicController implements ITopicController {
 
-    private final TopicService topicService;
-    private final TagSetService tagSetService;
+    private final ITopicService topicService;
 
-    @GetMapping
-    public Result<List<Topic>> list() {
-        return Result.ok(topicService.listTopics(UserContext.currentUserId()));
+    @Override
+    public Result<List<TopicResponse>> list() {
+        Long userId = UserContext.currentUserId();
+        log.debug("List topics userId={}", userId);
+        return Result.ok(topicService.listTopics(userId).stream().map(this::toResponse).toList());
     }
 
-    @PostMapping
-    public Result<Topic> create(@Valid @RequestBody CreateTopicRequest req) {
-        return Result.ok(topicService.createTopic(UserContext.currentUserId(), req.getName(), req.getDescription()));
+    @Override
+    public Result<TopicResponse> create(@Valid @RequestBody CreateTopicRequest req) {
+        Long userId = UserContext.currentUserId();
+        log.info("Create topic requested userId={} name={}", userId, req.getName());
+        Topic topic = topicService.createTopic(userId, req.getName(), req.getDescription());
+        log.info("Create topic succeeded userId={} topicId={} name={}", userId, topic.getId(), topic.getName());
+        return Result.ok(toResponse(topic));
     }
 
-    @GetMapping("/{id}")
-    public Result<Topic> detail(@PathVariable Long id) {
-        return Result.ok(topicService.getTopic(id, UserContext.currentUserId()));
+    @Override
+    public Result<TopicResponse> detail(@PathVariable Long id) {
+        Long userId = UserContext.currentUserId();
+        log.debug("Load topic detail userId={} topicId={}", userId, id);
+        return Result.ok(toResponse(topicService.getTopic(id, userId)));
     }
 
-    @PutMapping("/{id}")
-    public Result<Topic> update(@PathVariable Long id, @Valid @RequestBody UpdateTopicRequest req) {
-        return Result.ok(topicService.updateTopic(id, UserContext.currentUserId(), req.getName(), req.getDescription()));
+    @Override
+    public Result<TopicResponse> update(@PathVariable Long id, @Valid @RequestBody UpdateTopicRequest req) {
+        Long userId = UserContext.currentUserId();
+        log.info("Update topic requested userId={} topicId={} nameChanged={} descriptionChanged={}",
+                userId, id, req.getName() != null, req.getDescription() != null);
+        Topic topic = topicService.updateTopic(id, userId, req.getName(), req.getDescription());
+        log.info("Update topic succeeded userId={} topicId={}", userId, id);
+        return Result.ok(toResponse(topic));
     }
 
-    @PostMapping("/{id}/disable")
+    @Override
     public Result<Void> disable(@PathVariable Long id) {
-        topicService.disableTopic(id, UserContext.currentUserId());
+        Long userId = UserContext.currentUserId();
+        topicService.disableTopic(id, userId);
+        log.info("Disable topic succeeded userId={} topicId={}", userId, id);
         return Result.ok();
     }
 
-    @PostMapping("/{id}/enable")
+    @Override
     public Result<Void> enable(@PathVariable Long id) {
-        topicService.enableTopic(id, UserContext.currentUserId());
+        Long userId = UserContext.currentUserId();
+        topicService.enableTopic(id, userId);
+        log.info("Enable topic succeeded userId={} topicId={}", userId, id);
         return Result.ok();
     }
 
-    @DeleteMapping("/{id}")
+    @Override
     public Result<Void> delete(@PathVariable Long id) {
-        topicService.deleteTopic(id, UserContext.currentUserId());
+        Long userId = UserContext.currentUserId();
+        topicService.deleteTopic(id, userId);
+        log.info("Delete topic succeeded userId={} topicId={}", userId, id);
         return Result.ok();
     }
 
-    @Data
-    public static class CreateTopicRequest {
-        @NotBlank @Size(max = 50) private String name;
-        @Size(max = 500) private String description;
+    @Override
+    public Result<TopicStatsResponse> stats(@PathVariable Long id) {
+        Long userId = UserContext.currentUserId();
+        log.debug("Load topic stats userId={} topicId={}", userId, id);
+        TopicStats stats = topicService.getTopicStats(id, userId);
+        return Result.ok(new TopicStatsResponse(stats.getTotalMaterials(), stats.getStatusCounts(), stats.getTypeCounts(),
+                stats.getWeeklyNew(), stats.getAverageScore(), stats.getPendingCount()));
     }
 
-    @Data
-    public static class UpdateTopicRequest {
-        @Size(max = 50) private String name;
-        @Size(max = 500) private String description;
+    private TopicResponse toResponse(Topic topic) {
+        return new TopicResponse(topic.getId(), topic.getUserId(), topic.getName(), topic.getDescription(),
+                topic.getStatus(), topic.getMaterialCount(), topic.getCreatedAt(), topic.getUpdatedAt());
     }
-
 }

@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * 资料元信息实体，负责承载作者、平台、封面、字数和扩展字段等补充信息。
+ */
 @Data
 @Builder
 @NoArgsConstructor

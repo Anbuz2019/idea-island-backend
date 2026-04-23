@@ -3,6 +3,9 @@ package com.anbuz.types.enums;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 资料状态枚举，负责定义资料从收件箱到归档、删除等生命周期状态。
+ */
 @Getter
 @AllArgsConstructor
 public enum MaterialStatus {

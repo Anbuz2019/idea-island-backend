@@ -3,6 +3,9 @@ package com.anbuz.types.model;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+/**
+ * 统一错误码，负责定义 API 失败响应和业务异常的标准分类。
+ */
 @Getter
 @AllArgsConstructor
 public enum ErrorCode {

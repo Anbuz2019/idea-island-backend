@@ -7,6 +7,9 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * 主题 MyBatis Mapper，负责 topic 表及主题统计查询。
+ */
 @Mapper
 public interface ITopicDao {
 
@@ -21,5 +24,7 @@ public interface ITopicDao {
     List<TopicPO> selectByUserId(@Param("userId") Long userId);
 
     int countByUserIdAndName(@Param("userId") Long userId, @Param("name") String name);
+
+    long countByUserId(@Param("userId") Long userId);
 
 }
