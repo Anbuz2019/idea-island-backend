@@ -38,52 +38,6 @@ services:
       timeout: 5s
       retries: 5
 
-  nacos:
-    image: nacos/nacos-server:v2.4.3
-    container_name: idea-island-nacos
-    restart: unless-stopped
-    environment:
-      MODE: standalone
-      NACOS_AUTH_ENABLE: "true"
-      NACOS_AUTH_TOKEN: ${NACOS_AUTH_TOKEN}
-      # SPRING_DATASOURCE_PLATFORM: mysql
-      # MYSQL_SERVICE_HOST: mysql
-      # MYSQL_SERVICE_PORT: 3306
-      # MYSQL_SERVICE_DB_NAME: nacos
-      # MYSQL_SERVICE_USER: ${DB_USERNAME}
-      # MYSQL_SERVICE_PASSWORD: ${DB_PASSWORD}
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-    depends_on:
-      mysql:
-        condition: service_healthy
-
-  rocketmq-namesrv:
-    image: apache/rocketmq:5.3.1
-    container_name: idea-island-rocketmq-namesrv
-    restart: unless-stopped
-    command: sh mqnamesrv
-    ports:
-      - "9876:9876"
-    volumes:
-      - ./rocketmq/logs:/home/rocketmq/logs
-
-  rocketmq-broker:
-    image: apache/rocketmq:5.3.1
-    container_name: idea-island-rocketmq-broker
-    restart: unless-stopped
-    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/broker.conf
-    ports:
-      - "10909:10909"
-      - "10911:10911"
-    depends_on:
-      - rocketmq-namesrv
-    volumes:
-      - ./rocketmq/store:/home/rocketmq/store
-      - ./rocketmq/logs:/home/rocketmq/logs
-      - ./conf/broker.conf:/home/rocketmq/broker.conf:ro
-
   xxl-job-admin:
     image: xuxueli/xxl-job-admin:2.4.1
     container_name: idea-island-xxl-job
@@ -113,8 +67,6 @@ services:
     environment:
       DB_HOST: mysql
       REDIS_HOST: redis
-      NACOS_HOST: nacos
-      ROCKETMQ_NAMESRV: rocketmq-namesrv:9876
       XXL_JOB_ADMIN_URL: http://xxl-job-admin:8080/xxl-job-admin
     ports:
       - "8091:8091"
@@ -123,10 +75,6 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      nacos:
-        condition: service_started
-      rocketmq-broker:
-        condition: service_started
     volumes:
       - app_logs:/app/logs
       - app_data_logs:/app/data/log

@@ -1,33 +1,33 @@
 package com.anbuz.trigger.listener;
 
 import com.anbuz.domain.content.service.IContentProcessService;
+import com.anbuz.domain.material.model.event.MaterialSubmittedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
-import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 /**
- * 资料提交事件消费者，负责把提交后的资料转入异步内容加工链路。
+ * 资料提交事件消费者，负责在应用内异步触发资料内容加工链路。
  */
 @Slf4j
 @Component
-@RocketMQMessageListener(topic = "material-submitted", consumerGroup = "content-process-group")
 @RequiredArgsConstructor
-public class MaterialSubmittedEventConsumer implements RocketMQListener<String> {
+public class MaterialSubmittedEventConsumer {
 
     private final IContentProcessService contentProcessService;
 
-    @Override
-    public void onMessage(String message) {
-        log.info("收到 MaterialSubmittedEvent: {}", message);
+    @Async("materialEventExecutor")
+    @EventListener
+    public void onMessage(MaterialSubmittedEvent event) {
+        Long materialId = event.materialId();
+        log.info("Receive local MaterialSubmittedEvent materialId={}", materialId);
         try {
-            Long materialId = Long.parseLong(message.trim());
             contentProcessService.process(materialId);
         } catch (Exception e) {
-            log.error("处理 MaterialSubmittedEvent 失败, message={}", message, e);
+            log.error("Process MaterialSubmittedEvent failed materialId={}", materialId, e);
             throw e;
         }
     }
-
 }

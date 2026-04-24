@@ -19,8 +19,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
-        <spring-cloud.version>2024.0.2</spring-cloud.version>
-        <spring-cloud-alibaba.version>2023.0.3.4</spring-cloud-alibaba.version>
         <springdoc.version>2.8.8</springdoc.version>
         <swagger-api.version>2.2.30</swagger-api.version>
     </properties>
@@ -45,24 +43,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Spring Cloud Alibaba BOM -->
-            <dependency>
-                <groupId>com.alibaba.cloud</groupId>
-                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
-                <version>${spring-cloud-alibaba.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
-            <!-- Spring Cloud BOM -->
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-dependencies</artifactId>
-                <version>${spring-cloud.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            
             <!-- MyBatis -->
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
@@ -117,13 +97,6 @@
                 <groupId>com.xuxueli</groupId>
                 <artifactId>xxl-job-core</artifactId>
                 <version>2.5.0</version>
-            </dependency>
-
-            <!-- RocketMQ -->
-            <dependency>
-                <groupId>org.apache.rocketmq</groupId>
-                <artifactId>rocketmq-spring-boot-starter</artifactId>
-                <version>2.3.1</version>
             </dependency>
 
             <!-- Tencent COS -->

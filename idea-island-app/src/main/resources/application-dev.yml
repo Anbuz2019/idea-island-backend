@@ -1,7 +1,7 @@
 server:
   port: 8091
 
-# 线程池配置（可通过 Nacos 热更新）
+# 线程池配置
 thread:
   pool:
     executor:
@@ -74,18 +74,6 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
-
-# RocketMQ
-rocketmq:
-  name-server: 127.0.0.1:9876
-  consumer:
-    group: idea-island-group
-    pull-batch-size: 10
-  producer:
-    group: idea-island-group
-    send-message-timeout: 10000
-    retry-times-when-send-failed: 2
-    retry-times-when-send-async-failed: 2
 
 # XXL-Job
 xxl:
