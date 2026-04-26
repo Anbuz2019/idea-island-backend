@@ -36,6 +36,8 @@ public interface IMaterialRepository {
 
     void deleteUserTags(Long materialId);
 
+    void deleteTags(Long materialId);
+
     void saveTags(List<MaterialTag> tags);
 
     List<MaterialTag> findTagsByMaterialId(Long materialId);

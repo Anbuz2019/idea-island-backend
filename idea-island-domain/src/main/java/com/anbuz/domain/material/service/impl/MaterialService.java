@@ -375,6 +375,7 @@ public class MaterialService implements IMaterialService {
     @Transactional
     public void invalidate(Long userId, Long materialId, String invalidReason) {
         statusTransitionService.transit(materialId, userId, MaterialAction.INVALIDATE, null, null, invalidReason);
+        materialRepository.deleteTags(materialId);
     }
 
     @Override
@@ -441,7 +442,7 @@ public class MaterialService implements IMaterialService {
         if (normalized.getPageSize() > 100) {
             normalized.setPageSize(100);
         }
-        if (!List.of("createdAt", "score", "status").contains(normalized.getSortBy())) {
+        if (null==normalized.getSortBy() || !List.of("createdAt", "score", "status").contains(normalized.getSortBy())) {
             normalized.setSortBy("createdAt");
         }
         if (!"ASC".equalsIgnoreCase(normalized.getSortDirection())) {

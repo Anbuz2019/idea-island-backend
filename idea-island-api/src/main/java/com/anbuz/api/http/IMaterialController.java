@@ -214,11 +214,9 @@ public interface IMaterialController {
     @Data
     class CollectRequest {
         @Schema(description = "评语", example = "结构清晰，值得收录")
-        @NotBlank
         @Size(max = 2000)
         private String comment;
         @Schema(description = "评分，0 到 10，最多 1 位小数", example = "8.5")
-        @NotNull
         @DecimalMin("0.0")
         @DecimalMax("10.0")
         @Digits(integer = 2, fraction = 1)

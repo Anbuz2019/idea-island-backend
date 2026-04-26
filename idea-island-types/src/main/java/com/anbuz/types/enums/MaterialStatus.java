@@ -10,8 +10,8 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum MaterialStatus {
 
-    INBOX("INBOX", "收件箱"),
-    PENDING_REVIEW("PENDING_REVIEW", "待评价"),
+    INBOX("INBOX", "待阅读"),
+    PENDING_REVIEW("PENDING_REVIEW", "待总结"),
     COLLECTED("COLLECTED", "已收录"),
     ARCHIVED("ARCHIVED", "已归档"),
     INVALID("INVALID", "已失效");

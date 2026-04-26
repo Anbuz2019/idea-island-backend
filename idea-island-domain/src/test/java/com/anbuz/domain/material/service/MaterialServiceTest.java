@@ -868,7 +868,8 @@ class MaterialServiceTest {
             materialService.invalidate(USER_ID, MATERIAL_ID, "404");
 
             verify(statusTransitionService).transit(MATERIAL_ID, USER_ID, MaterialAction.INVALIDATE, null, null, "404");
-            verifyNoInteractions(materialRepository, topicRepository, systemTagService, materialEventPublisher);
+            verify(materialRepository).deleteTags(MATERIAL_ID);
+            verifyNoInteractions(topicRepository, systemTagService, materialEventPublisher);
         }
 
         @Test

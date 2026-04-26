@@ -51,21 +51,33 @@ public class StatusTransitionService implements IStatusTransitionService {
                 material.setStatus(MaterialStatus.PENDING_REVIEW);
             }
             case COLLECT -> {
-                if (current != MaterialStatus.INBOX && current != MaterialStatus.PENDING_REVIEW) {
+                if (current != MaterialStatus.INBOX
+                        && current != MaterialStatus.PENDING_REVIEW
+                        && current != MaterialStatus.COLLECTED
+                        && current != MaterialStatus.ARCHIVED) {
                     log.warn("Material collect rejected due to invalid status materialId={} currentStatus={}", materialId, current);
                     throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION,
                             "当前状态 " + current + " 不支持完成评价");
                 }
-                if (comment == null || comment.isBlank()) {
-                    throw new AppException(ErrorCode.PARAM_INVALID, "完成评价需填写评语");
+                boolean hasComment = comment != null && !comment.isBlank();
+                boolean hasScore = score != null;
+                if (!hasComment && !hasScore) {
+                    throw new AppException(ErrorCode.PARAM_INVALID, "完成评价需填写评语或评分至少一项");
                 }
-                if (score == null) {
-                    throw new AppException(ErrorCode.PARAM_INVALID, "完成评价需填写评分");
+                if (hasComment) {
+                    material.setComment(comment);
                 }
-                material.setComment(comment);
-                material.setScore(score);
-                material.setStatus(MaterialStatus.COLLECTED);
-                material.setCollectedAt(now);
+                if (hasScore) {
+                    material.setScore(score);
+                }
+                if (current == MaterialStatus.COLLECTED || current == MaterialStatus.ARCHIVED) {
+                    // Already settled materials can update review fields without changing their lifecycle state.
+                } else if (hasComment && hasScore) {
+                    material.setStatus(MaterialStatus.COLLECTED);
+                    material.setCollectedAt(now);
+                } else {
+                    material.setStatus(MaterialStatus.PENDING_REVIEW);
+                }
             }
             case ARCHIVE -> {
                 if (current != MaterialStatus.PENDING_REVIEW && current != MaterialStatus.COLLECTED) {

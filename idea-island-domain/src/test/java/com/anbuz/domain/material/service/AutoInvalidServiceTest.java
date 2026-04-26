@@ -64,6 +64,7 @@ class AutoInvalidServiceTest {
 
             ArgumentCaptor<Material> captor = ArgumentCaptor.forClass(Material.class);
             verify(materialRepository).updateMaterial(captor.capture());
+            verify(materialRepository).deleteTags(100L);
             assertThat(captor.getValue())
                     .returns(MaterialStatus.INVALID, Material::getStatus)
                     .returns("系统自动失效：超过 90 天未处理", Material::getInvalidReason)

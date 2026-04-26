@@ -98,29 +98,63 @@ class StatusTransitionServiceTest {
         }
 
         @Test
-        @DisplayName("完成评价缺少评语，应抛出参数校验异常")
-        void givenMissingComment_whenCollect_thenThrowsParamInvalid() {
+        @DisplayName("PENDING_REVIEW 状态只填写评分，应保持待评价并更新评分")
+        void givenOnlyScore_whenCollect_thenKeepsPendingReviewAndUpdatesScore() {
             Material material = buildMaterial(MaterialStatus.PENDING_REVIEW);
             when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
 
-            assertThatThrownBy(() ->
-                    statusTransitionService.transit(MATERIAL_ID, USER_ID, MaterialAction.COLLECT, null, new BigDecimal("8.0"), null))
-                    .isInstanceOf(AppException.class)
-                    .extracting("code")
-                    .isEqualTo(ErrorCode.PARAM_INVALID.getCode());
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.COLLECT, null, new BigDecimal("8.0"), null);
+
+            assertThat(result.getStatus()).isEqualTo(MaterialStatus.PENDING_REVIEW);
+            assertThat(result.getScore()).isEqualByComparingTo("8.0");
         }
 
         @Test
-        @DisplayName("完成评价缺少评分，应抛出参数校验异常")
-        void givenMissingScore_whenCollect_thenThrowsParamInvalid() {
+        @DisplayName("PENDING_REVIEW 状态只填写评语，应保持待评价并更新评语")
+        void givenOnlyComment_whenCollect_thenKeepsPendingReviewAndUpdatesComment() {
             Material material = buildMaterial(MaterialStatus.PENDING_REVIEW);
             when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
 
-            assertThatThrownBy(() ->
-                    statusTransitionService.transit(MATERIAL_ID, USER_ID, MaterialAction.COLLECT, "好文章", null, null))
-                    .isInstanceOf(AppException.class)
-                    .extracting("code")
-                    .isEqualTo(ErrorCode.PARAM_INVALID.getCode());
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.COLLECT, "good", null, null);
+
+            assertThat(result.getStatus()).isEqualTo(MaterialStatus.PENDING_REVIEW);
+            assertThat(result.getComment()).isEqualTo("good");
+        }
+
+        @Test
+        @DisplayName("COLLECTED 状态再次完成评价，应更新评价并保持已收录")
+        void givenCollectedMaterial_whenCollectAgain_thenUpdatesReviewAndKeepsCollected() {
+            Material material = buildMaterial(MaterialStatus.COLLECTED);
+            LocalDateTime collectedAt = LocalDateTime.now().minusHours(2);
+            material.setCollectedAt(collectedAt);
+            when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
+
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.COLLECT, "updated", new BigDecimal("9.1"), null);
+
+            assertThat(result.getStatus()).isEqualTo(MaterialStatus.COLLECTED);
+            assertThat(result.getComment()).isEqualTo("updated");
+            assertThat(result.getScore()).isEqualByComparingTo("9.1");
+            assertThat(result.getCollectedAt()).isEqualTo(collectedAt);
+        }
+
+        @Test
+        @DisplayName("ARCHIVED 状态再次完成评价，应更新评价并保持已归档")
+        void givenArchivedMaterial_whenCollectAgain_thenUpdatesReviewAndKeepsArchived() {
+            Material material = buildMaterial(MaterialStatus.ARCHIVED);
+            LocalDateTime archivedAt = LocalDateTime.now().minusHours(1);
+            material.setArchivedAt(archivedAt);
+            when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
+
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.COLLECT, "archived update", new BigDecimal("7.6"), null);
+
+            assertThat(result.getStatus()).isEqualTo(MaterialStatus.ARCHIVED);
+            assertThat(result.getComment()).isEqualTo("archived update");
+            assertThat(result.getScore()).isEqualByComparingTo("7.6");
+            assertThat(result.getArchivedAt()).isEqualTo(archivedAt);
         }
     }
 

@@ -87,6 +87,11 @@ public class MaterialRepository implements IMaterialRepository {
     }
 
     @Override
+    public void deleteTags(Long materialId) {
+        materialTagDao.deleteByMaterialId(materialId);
+    }
+
+    @Override
     public void saveTags(List<MaterialTag> tags) {
         if (tags == null || tags.isEmpty()) return;
         try {

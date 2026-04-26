@@ -45,3 +45,4 @@ rocketmq/store/
 
 ### Design ###
 docs/design
+/data/log/

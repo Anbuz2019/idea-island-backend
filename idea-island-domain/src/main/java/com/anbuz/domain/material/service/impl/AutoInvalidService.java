@@ -64,6 +64,7 @@ public class AutoInvalidService implements IAutoInvalidService {
             material.setInvalidAt(now);
             material.setUpdatedAt(now);
             materialRepository.updateMaterial(material);
+            materialRepository.deleteTags(material.getId());
         }
         log.info("Auto invalid batch completed count={} reason={}", materials.size(), reason);
     }
