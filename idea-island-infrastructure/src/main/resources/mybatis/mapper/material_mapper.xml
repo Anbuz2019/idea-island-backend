@@ -17,7 +17,9 @@
         <result property="score" column="score"/>
         <result property="invalidReason" column="invalid_reason"/>
         <result property="inboxAt" column="inbox_at"/>
+        <result property="inboxReadAt" column="inbox_read_at"/>
         <result property="collectedAt" column="collected_at"/>
+        <result property="collectedReadAt" column="collected_read_at"/>
         <result property="archivedAt" column="archived_at"/>
         <result property="invalidAt" column="invalid_at"/>
         <result property="lastRetrievedAt" column="last_retrieved_at"/>
@@ -30,11 +32,11 @@
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO material (user_id, topic_id, material_type, status, title, description,
                               raw_content, source_url, file_key, comment, score, invalid_reason,
-                              inbox_at, collected_at, archived_at, invalid_at, last_retrieved_at,
+                              inbox_at, inbox_read_at, collected_at, collected_read_at, archived_at, invalid_at, last_retrieved_at,
                               is_deleted, deleted_at, created_at, updated_at)
         VALUES (#{userId}, #{topicId}, #{materialType}, #{status}, #{title}, #{description},
                 #{rawContent}, #{sourceUrl}, #{fileKey}, #{comment}, #{score}, #{invalidReason},
-                #{inboxAt}, #{collectedAt}, #{archivedAt}, #{invalidAt}, #{lastRetrievedAt},
+                #{inboxAt}, #{inboxReadAt}, #{collectedAt}, #{collectedReadAt}, #{archivedAt}, #{invalidAt}, #{lastRetrievedAt},
                 #{isDeleted}, #{deletedAt}, #{createdAt}, #{updatedAt})
     </insert>
 
@@ -50,7 +52,11 @@
             <if test="score != null">score = #{score},</if>
             <if test="invalidReason != null">invalid_reason = #{invalidReason},</if>
             <if test="inboxAt != null">inbox_at = #{inboxAt},</if>
+            <if test="inboxReadAt != null">inbox_read_at = #{inboxReadAt},</if>
+            <if test="status != null and status == 'INBOX' and inboxReadAt == null">inbox_read_at = NULL,</if>
             <if test="collectedAt != null">collected_at = #{collectedAt},</if>
+            <if test="collectedReadAt != null">collected_read_at = #{collectedReadAt},</if>
+            <if test="status != null and status == 'COLLECTED' and collectedReadAt == null">collected_read_at = NULL,</if>
             <if test="archivedAt != null">archived_at = #{archivedAt},</if>
             <if test="invalidAt != null">invalid_at = #{invalidAt},</if>
             <if test="isDeleted != null">is_deleted = #{isDeleted},</if>
@@ -135,27 +141,68 @@
                 )
             </foreach>
         </if>
+        <if test="unreadOnly">
+            AND (
+                (m.status = 'INBOX' AND m.inbox_read_at IS NULL)
+                OR (m.status = 'COLLECTED' AND m.collected_read_at IS NULL)
+            )
+        </if>
     </sql>
 
     <select id="selectByQuery" resultMap="materialMap">
         SELECT m.*
         <include refid="queryWhere"/>
         ORDER BY
-        CASE m.status
-            WHEN 'INBOX' THEN 1
-            WHEN 'PENDING_REVIEW' THEN 2
-            WHEN 'COLLECTED' THEN 3
-            WHEN 'ARCHIVED' THEN 4
-            ELSE 5
-        END,
         <choose>
-            <when test="sortBy == 'score'">m.score</when>
-            <when test="sortBy == 'status'">m.status</when>
-            <otherwise>m.created_at</otherwise>
-        </choose>
-        <choose>
-            <when test="sortDirection == 'ASC'"> ASC </when>
-            <otherwise> DESC </otherwise>
+            <when test="sortBy == 'score'">
+                COALESCE(m.score, 0)
+                <choose>
+                    <when test="sortDirection == 'ASC'"> ASC </when>
+                    <otherwise> DESC </otherwise>
+                </choose>
+            </when>
+            <when test="sortBy == 'statusAt'">
+                COALESCE(
+                    CASE m.status
+                        WHEN 'INBOX' THEN m.inbox_at
+                        WHEN 'PENDING_REVIEW' THEN m.updated_at
+                        WHEN 'COLLECTED' THEN m.collected_at
+                        WHEN 'ARCHIVED' THEN m.archived_at
+                        WHEN 'INVALID' THEN m.invalid_at
+                        ELSE m.updated_at
+                    END,
+                    m.updated_at,
+                    m.created_at
+                )
+                <choose>
+                    <when test="sortDirection == 'ASC'"> ASC </when>
+                    <otherwise> DESC </otherwise>
+                </choose>
+            </when>
+            <when test="sortBy == 'updatedAt'">
+                m.updated_at
+                <choose>
+                    <when test="sortDirection == 'ASC'"> ASC </when>
+                    <otherwise> DESC </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                CASE m.status
+                    WHEN 'INBOX' THEN 1
+                    WHEN 'PENDING_REVIEW' THEN 2
+                    WHEN 'COLLECTED' THEN 3
+                    WHEN 'ARCHIVED' THEN 4
+                    ELSE 5
+                END,
+                <choose>
+                    <when test="sortBy == 'status'">m.status</when>
+                    <otherwise>m.created_at</otherwise>
+                </choose>
+                <choose>
+                    <when test="sortDirection == 'ASC'"> ASC </when>
+                    <otherwise> DESC </otherwise>
+                </choose>
+            </otherwise>
         </choose>
         , m.id DESC
         LIMIT #{pageSize} OFFSET #{offset}

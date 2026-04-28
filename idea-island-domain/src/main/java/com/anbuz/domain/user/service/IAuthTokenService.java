@@ -5,9 +5,9 @@ package com.anbuz.domain.user.service;
  */
 public interface IAuthTokenService {
 
-    void storeToken(Long userId, String token);
+    void storeToken(Long userId, String clientType, String token);
 
-    String getToken(Long userId);
+    String getToken(Long userId, String clientType);
 
-    void removeToken(Long userId);
+    void removeToken(Long userId, String clientType);
 }

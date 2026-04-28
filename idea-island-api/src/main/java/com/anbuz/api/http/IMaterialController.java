@@ -116,12 +116,14 @@ public interface IMaterialController {
         private LocalDateTime createdEnd;
         @Schema(description = "关键词，匹配标题和正文", example = "redis")
         private String keyword;
-        @Schema(description = "排序字段：createdAt、score、status", example = "createdAt")
+        @Schema(description = "排序字段：createdAt、updatedAt、score、status、statusAt", example = "createdAt")
         private String sortBy;
         @Schema(description = "排序方向：ASC 或 DESC", example = "DESC")
         private String sortDirection;
         @Schema(description = "标签筛选 JSON 字符串，不同组 AND，同组多值 OR")
         private String tagFilters;
+        @Schema(description = "鏄惁鍙繑鍥炴湭璇昏祫鏂?, example = \"false\"")
+        private Boolean unreadOnly;
         @Schema(description = "页码，从 1 开始", example = "1")
         @Min(1)
         private int page = 1;
@@ -255,8 +257,9 @@ public interface IMaterialController {
     @Schema(description = "资料基本信息响应")
     record MaterialResponse(Long id, Long userId, Long topicId, String materialType, String status,
                             String title, String description, String rawContent, String sourceUrl,
-                            String fileKey, String comment, BigDecimal score, String invalidReason,
-                            LocalDateTime inboxAt, LocalDateTime collectedAt, LocalDateTime archivedAt,
+                            String fileKey, String comment, BigDecimal score, Boolean unread,
+                            String invalidReason, LocalDateTime inboxAt, LocalDateTime inboxReadAt,
+                            LocalDateTime collectedAt, LocalDateTime collectedReadAt, LocalDateTime archivedAt,
                             LocalDateTime invalidAt, LocalDateTime lastRetrievedAt, Boolean deleted,
                             LocalDateTime deletedAt, LocalDateTime createdAt, LocalDateTime updatedAt) {}
 

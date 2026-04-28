@@ -7,10 +7,10 @@ import java.time.Duration;
  */
 public interface IAuthTokenRepository {
 
-    void storeToken(Long userId, String token, Duration ttl);
+    void storeToken(Long userId, String clientType, String token, Duration ttl);
 
-    String getToken(Long userId);
+    String getToken(Long userId, String clientType);
 
-    void removeToken(Long userId);
+    void removeToken(Long userId, String clientType);
 
 }

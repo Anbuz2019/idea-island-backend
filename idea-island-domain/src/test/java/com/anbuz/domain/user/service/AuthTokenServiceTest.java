@@ -39,9 +39,9 @@ class AuthTokenServiceTest {
         @Test
         @DisplayName("stores the token with the configured ttl")
         void givenUserIdAndToken_whenStoreToken_thenDelegatesWithConfiguredTtl() {
-            authTokenService.storeToken(1L, "access-token");
+            authTokenService.storeToken(1L, "web", "access-token");
 
-            verify(authTokenRepository).storeToken(1L, "access-token", Duration.ofDays(7));
+            verify(authTokenRepository).storeToken(1L, "web", "access-token", Duration.ofDays(7));
         }
     }
 
@@ -52,10 +52,10 @@ class AuthTokenServiceTest {
         @Test
         @DisplayName("returns the token read from the repository")
         void givenStoredToken_whenGetToken_thenReturnsRepositoryValue() {
-            when(authTokenRepository.getToken(2L)).thenReturn("stored-token");
+            when(authTokenRepository.getToken(2L, "mobile")).thenReturn("stored-token");
 
-            assertThat(authTokenService.getToken(2L)).isEqualTo("stored-token");
-            verify(authTokenRepository).getToken(2L);
+            assertThat(authTokenService.getToken(2L, "mobile")).isEqualTo("stored-token");
+            verify(authTokenRepository).getToken(2L, "mobile");
         }
     }
 
@@ -66,9 +66,9 @@ class AuthTokenServiceTest {
         @Test
         @DisplayName("removes the token from the repository")
         void givenUserId_whenRemoveToken_thenDelegatesRemoval() {
-            authTokenService.removeToken(3L);
+            authTokenService.removeToken(3L, "web");
 
-            verify(authTokenRepository).removeToken(3L);
+            verify(authTokenRepository).removeToken(3L, "web");
         }
     }
 

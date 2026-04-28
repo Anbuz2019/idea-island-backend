@@ -98,10 +98,11 @@ class JwtAuthFilterTest {
         void givenStoredTokenMismatch_whenDoFilter_thenReturnsUnauthorized() throws Exception {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/users/me");
             request.addHeader("Authorization", "Bearer valid-token");
+            request.addHeader("X-Client-Type", "pc");
             MockHttpServletResponse response = new MockHttpServletResponse();
             FilterChain chain = mock(FilterChain.class);
             when(authService.parseUserId("valid-token")).thenReturn(7L);
-            when(authTokenService.getToken(7L)).thenReturn("other-token");
+            when(authTokenService.getToken(7L, "pc")).thenReturn("other-token");
 
             jwtAuthFilter.doFilter(request, response, chain);
 
@@ -109,14 +110,15 @@ class JwtAuthFilterTest {
         }
 
         @Test
-        @DisplayName("rejects the old token after a repeated login replaced it in redis")
-        void givenOldTokenAfterRepeatedLogin_whenDoFilter_thenReturnsUnauthorized() throws Exception {
+        @DisplayName("isolates client sessions and rejects mismatched token for the same client")
+        void givenDifferentClientSession_whenDoFilter_thenReturnsUnauthorized() throws Exception {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/users/me");
             request.addHeader("Authorization", "Bearer old-token");
+            request.addHeader("X-Client-Type", "mobile");
             MockHttpServletResponse response = new MockHttpServletResponse();
             FilterChain chain = mock(FilterChain.class);
             when(authService.parseUserId("old-token")).thenReturn(8L);
-            when(authTokenService.getToken(8L)).thenReturn("new-token");
+            when(authTokenService.getToken(8L, "mobile")).thenReturn("new-token");
 
             jwtAuthFilter.doFilter(request, response, chain);
 
@@ -128,17 +130,18 @@ class JwtAuthFilterTest {
         void givenExpiringToken_whenDoFilter_thenRefreshesTokenAndContinues() throws Exception {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/users/me");
             request.addHeader("Authorization", "Bearer valid-token");
+            request.addHeader("X-Client-Type", "mobile");
             MockHttpServletResponse response = new MockHttpServletResponse();
             FilterChain chain = mock(FilterChain.class);
             when(authService.parseUserId("valid-token")).thenReturn(9L);
-            when(authTokenService.getToken(9L)).thenReturn("valid-token");
+            when(authTokenService.getToken(9L, "mobile")).thenReturn("valid-token");
             when(authService.isExpiringSoon("valid-token")).thenReturn(true);
             when(authService.generateToken(9L)).thenReturn("new-token");
 
             jwtAuthFilter.doFilter(request, response, chain);
 
             verify(chain).doFilter(request, response);
-            verify(authTokenService).storeToken(9L, "new-token");
+            verify(authTokenService).storeToken(9L, "mobile", "new-token");
             assertThat(response).returns("new-token", it -> it.getHeader("X-Refresh-Token"));
         }
 
@@ -171,5 +174,4 @@ class JwtAuthFilterTest {
             throw new AssertionError("Failed to read response body", e);
         }
     }
-
 }

@@ -20,16 +20,16 @@ public class AuthTokenService implements IAuthTokenService {
     @Value("${jwt.expire-days:7}")
     private int expireDays;
 
-    public void storeToken(Long userId, String token) {
-        authTokenRepository.storeToken(userId, token, Duration.ofDays(expireDays));
+    public void storeToken(Long userId, String clientType, String token) {
+        authTokenRepository.storeToken(userId, clientType, token, Duration.ofDays(expireDays));
     }
 
-    public String getToken(Long userId) {
-        return authTokenRepository.getToken(userId);
+    public String getToken(Long userId, String clientType) {
+        return authTokenRepository.getToken(userId, clientType);
     }
 
-    public void removeToken(Long userId) {
-        authTokenRepository.removeToken(userId);
+    public void removeToken(Long userId, String clientType) {
+        authTokenRepository.removeToken(userId, clientType);
     }
 
 }

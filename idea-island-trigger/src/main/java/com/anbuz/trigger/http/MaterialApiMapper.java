@@ -65,9 +65,12 @@ final class MaterialApiMapper {
                 material.getFileKey(),
                 material.getComment(),
                 material.getScore(),
+                isUnread(material),
                 material.getInvalidReason(),
                 material.getInboxAt(),
+                material.getInboxReadAt(),
                 material.getCollectedAt(),
+                material.getCollectedReadAt(),
                 material.getArchivedAt(),
                 material.getInvalidAt(),
                 material.getLastRetrievedAt(),
@@ -159,5 +162,16 @@ final class MaterialApiMapper {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&#39;");
+    }
+
+    private static boolean isUnread(Material material) {
+        if (material == null || material.getStatus() == null) {
+            return false;
+        }
+        return switch (material.getStatus()) {
+            case INBOX -> material.getInboxReadAt() == null;
+            case COLLECTED -> material.getCollectedReadAt() == null;
+            default -> false;
+        };
     }
 }

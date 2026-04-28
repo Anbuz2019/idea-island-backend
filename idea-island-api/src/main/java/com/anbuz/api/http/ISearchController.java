@@ -55,7 +55,7 @@ public interface ISearchController {
         @Schema(description = "创建时间终点，ISO 日期时间")
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         private LocalDateTime createdEnd;
-        @Schema(description = "排序字段：createdAt、score、status", example = "createdAt")
+        @Schema(description = "排序字段：createdAt、updatedAt、score、status、statusAt", example = "createdAt")
         private String sortBy;
         @Schema(description = "排序方向：ASC 或 DESC", example = "DESC")
         private String sortDirection;

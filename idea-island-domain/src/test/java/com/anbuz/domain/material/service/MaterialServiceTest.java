@@ -358,6 +358,22 @@ class MaterialServiceTest {
                     .returns("createdAt", MaterialListQuery::getSortBy)
                     .returns("ASC", MaterialListQuery::getSortDirection);
         }
+
+        @Test
+        @DisplayName("keeps statusAt as a valid material list sort field")
+        void givenStatusAtSort_whenListMaterials_thenPassesSortFieldToRepository() {
+            when(materialRepository.queryMaterials(any(MaterialListQuery.class))).thenReturn(List.of());
+            when(materialRepository.countMaterials(any(MaterialListQuery.class))).thenReturn(0L);
+
+            materialService.listMaterials(USER_ID, MaterialListQuery.builder()
+                    .sortBy("statusAt")
+                    .sortDirection("DESC")
+                    .build());
+
+            ArgumentCaptor<MaterialListQuery> queryCaptor = ArgumentCaptor.forClass(MaterialListQuery.class);
+            verify(materialRepository).queryMaterials(queryCaptor.capture());
+            assertThat(queryCaptor.getValue()).returns("statusAt", MaterialListQuery::getSortBy);
+        }
     }
 
     @Nested

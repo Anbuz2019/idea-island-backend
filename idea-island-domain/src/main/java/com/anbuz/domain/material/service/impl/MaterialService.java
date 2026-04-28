@@ -85,6 +85,7 @@ public class MaterialService implements IMaterialService {
                 .fileKey(command.getFileKey())
                 .deleted(false)
                 .inboxAt(now)
+                .inboxReadAt(null)
                 .createdAt(now)
                 .updatedAt(now)
                 .build();
@@ -442,7 +443,7 @@ public class MaterialService implements IMaterialService {
         if (normalized.getPageSize() > 100) {
             normalized.setPageSize(100);
         }
-        if (null==normalized.getSortBy() || !List.of("createdAt", "score", "status").contains(normalized.getSortBy())) {
+        if (null==normalized.getSortBy() || !List.of("createdAt", "updatedAt", "score", "status", "statusAt").contains(normalized.getSortBy())) {
             normalized.setSortBy("createdAt");
         }
         if (!"ASC".equalsIgnoreCase(normalized.getSortDirection())) {

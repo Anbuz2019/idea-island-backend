@@ -66,15 +66,16 @@ class StatusTransitionServiceTest {
 
         @Test
         @DisplayName("非 INBOX 状态下标记已读，应抛出状态流转异常")
-        void givenCollectedMaterial_whenMarkRead_thenThrowsInvalidTransition() {
+        void givenCollectedMaterial_whenMarkRead_thenKeepsCollectedAndMarksRead() {
             Material material = buildMaterial(MaterialStatus.COLLECTED);
             when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
 
-            assertThatThrownBy(() ->
-                    statusTransitionService.transit(MATERIAL_ID, USER_ID, MaterialAction.MARK_READ, null, null, null))
-                    .isInstanceOf(AppException.class)
-                    .extracting("code")
-                    .isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION.getCode());
+            Material result = statusTransitionService.transit(
+                    MATERIAL_ID, USER_ID, MaterialAction.MARK_READ, null, null, null);
+
+            assertThat(result.getStatus()).isEqualTo(MaterialStatus.COLLECTED);
+            assertThat(result.getCollectedReadAt()).isNotNull();
+            verify(materialRepository).updateMaterial(any());
         }
     }
 

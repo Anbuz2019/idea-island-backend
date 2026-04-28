@@ -10,10 +10,13 @@ import com.anbuz.trigger.auth.UserContext;
 import com.anbuz.types.exception.AppException;
 import com.anbuz.types.model.ErrorCode;
 import com.anbuz.types.model.Result;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,6 +27,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 public class AuthController implements IAuthController {
+
+    private static final String CLIENT_TYPE_HEADER = "X-Client-Type";
 
     private final IUserService userService;
     private final IAuthService authService;
@@ -38,7 +43,7 @@ public class AuthController implements IAuthController {
         log.info("Auth register requested email={}", maskEmail(req.getEmail()));
         User user = userService.registerByEmail(req.getEmail(), req.getPassword(), req.getNickname());
         String token = authService.generateToken(user.getId());
-        authTokenService.storeToken(user.getId(), token);
+        authTokenService.storeToken(user.getId(), resolveClientType(), token);
         log.info("Auth register succeeded userId={} email={}", user.getId(), maskEmail(req.getEmail()));
         return Result.ok(new RegisterResponse(user.getId(), token));
     }
@@ -48,7 +53,7 @@ public class AuthController implements IAuthController {
         log.info("Auth login requested email={}", maskEmail(req.getEmail()));
         User user = userService.loginByEmail(req.getEmail(), req.getPassword());
         String token = authService.generateToken(user.getId());
-        authTokenService.storeToken(user.getId(), token);
+        authTokenService.storeToken(user.getId(), resolveClientType(), token);
         log.info("Auth login succeeded userId={} email={}", user.getId(), maskEmail(req.getEmail()));
         return Result.ok(new LoginResponse(user.getId(), user.getNickname(), token));
     }
@@ -70,7 +75,7 @@ public class AuthController implements IAuthController {
         }
         User user = userService.loginByPhone(req.getPhone());
         String token = authService.generateToken(user.getId());
-        authTokenService.storeToken(user.getId(), token);
+        authTokenService.storeToken(user.getId(), resolveClientType(), token);
         log.info("Phone login succeeded userId={} phone={}", user.getId(), maskPhone(req.getPhone()));
         return Result.ok(new LoginResponse(user.getId(), user.getNickname(), token));
     }
@@ -78,9 +83,32 @@ public class AuthController implements IAuthController {
     @Override
     public Result<Void> logout() {
         Long userId = UserContext.currentUserId();
-        authTokenService.removeToken(userId);
+        authTokenService.removeToken(userId, resolveClientType());
         log.info("Auth logout succeeded userId={}", userId);
         return Result.ok();
+    }
+
+    private String resolveClientType() {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes == null ? null : attributes.getRequest();
+        if (request == null) {
+            return "web";
+        }
+        String explicit = request.getHeader(CLIENT_TYPE_HEADER);
+        if (explicit != null && !explicit.isBlank()) {
+            return explicit.trim().toLowerCase();
+        }
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null) {
+            return "web";
+        }
+        String normalized = userAgent.toLowerCase();
+        return normalized.contains("mobile")
+                || normalized.contains("android")
+                || normalized.contains("iphone")
+                || normalized.contains("ipad")
+                ? "mobile"
+                : "web";
     }
 
     private String maskEmail(String email) {

@@ -16,7 +16,7 @@ import java.io.IOException;
 import java.util.Set;
 
 /**
- * JWT 认证过滤器，负责在请求进入 Controller 前解析 token 并写入用户上下文。
+ * JWT authentication filter that validates bearer tokens before entering controllers.
  */
 @Slf4j
 @Component
@@ -24,6 +24,7 @@ import java.util.Set;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final String BEARER_PREFIX = "Bearer ";
+    private static final String CLIENT_TYPE_HEADER = "X-Client-Type";
     private static final Set<String> OPEN_API_PATHS = Set.of(
             "/api/v1/auth/register",
             "/api/v1/auth/login",
@@ -67,7 +68,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             Long userId = authService.parseUserId(token);
-            String storedToken = authTokenService.getToken(userId);
+            String clientType = resolveClientType(request);
+            String storedToken = authTokenService.getToken(userId, clientType);
             if (!token.equals(storedToken)) {
                 writeUnauthorized(response, "{\"code\":1003,\"message\":\"Token 已失效\"}");
                 return;
@@ -76,7 +78,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             UserContext.set(userId);
             if (authService.isExpiringSoon(token)) {
                 String newToken = authService.generateToken(userId);
-                authTokenService.storeToken(userId, newToken);
+                authTokenService.storeToken(userId, clientType, newToken);
                 response.setHeader("X-Refresh-Token", newToken);
             }
 
@@ -89,10 +91,27 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
     }
 
+    private String resolveClientType(HttpServletRequest request) {
+        String explicit = request.getHeader(CLIENT_TYPE_HEADER);
+        if (StringUtils.hasText(explicit)) {
+            return explicit.trim().toLowerCase();
+        }
+        String userAgent = request.getHeader("User-Agent");
+        if (!StringUtils.hasText(userAgent)) {
+            return "web";
+        }
+        String normalized = userAgent.toLowerCase();
+        return normalized.contains("mobile")
+                || normalized.contains("android")
+                || normalized.contains("iphone")
+                || normalized.contains("ipad")
+                ? "mobile"
+                : "web";
+    }
+
     private void writeUnauthorized(HttpServletResponse response, String body) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
         response.getWriter().write(body);
     }
-
 }

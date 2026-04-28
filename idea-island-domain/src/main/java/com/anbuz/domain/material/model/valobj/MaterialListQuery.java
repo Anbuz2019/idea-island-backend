@@ -38,6 +38,8 @@ public class MaterialListQuery {
     @Builder.Default
     private int pageSize = 20;
     private List<TagFilter> tagFilters;
+    @Builder.Default
+    private boolean unreadOnly = false;
 
     public int getOffset() {
         return Math.max(page - 1, 0) * Math.max(pageSize, 1);

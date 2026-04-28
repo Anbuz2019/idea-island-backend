@@ -42,9 +42,9 @@ class AuthTokenRepositoryTest {
         void givenUserIdAndToken_whenStoreToken_thenWritesRedisValueWithTtl() {
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
 
-            authTokenRepository.storeToken(1L, "access-token", Duration.ofDays(7));
+            authTokenRepository.storeToken(1L, "web", "access-token", Duration.ofDays(7));
 
-            verify(valueOperations).set("token:1", "access-token", Duration.ofDays(7));
+            verify(valueOperations).set("token:web:1", "access-token", Duration.ofDays(7));
         }
     }
 
@@ -56,10 +56,10 @@ class AuthTokenRepositoryTest {
         @DisplayName("reads the token from redis")
         void givenStoredToken_whenGetToken_thenReturnsRedisValue() {
             when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-            when(valueOperations.get("token:2")).thenReturn("stored-token");
+            when(valueOperations.get("token:mobile:2")).thenReturn("stored-token");
 
-            assertThat(authTokenRepository.getToken(2L)).isEqualTo("stored-token");
-            verify(valueOperations).get("token:2");
+            assertThat(authTokenRepository.getToken(2L, "mobile")).isEqualTo("stored-token");
+            verify(valueOperations).get("token:mobile:2");
         }
     }
 
@@ -70,9 +70,9 @@ class AuthTokenRepositoryTest {
         @Test
         @DisplayName("deletes the token key from redis")
         void givenUserId_whenRemoveToken_thenDeletesRedisKey() {
-            authTokenRepository.removeToken(3L);
+            authTokenRepository.removeToken(3L, "web");
 
-            verify(redisTemplate).delete("token:3");
+            verify(redisTemplate).delete("token:web:3");
         }
     }
 

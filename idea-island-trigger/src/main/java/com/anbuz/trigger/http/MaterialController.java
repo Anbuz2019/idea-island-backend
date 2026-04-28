@@ -45,6 +45,7 @@ public class MaterialController implements IMaterialController {
                 .sortBy(request.getSortBy())
                 .sortDirection(request.getSortDirection())
                 .tagFilters(parseTagFilters(request.getTagFilters()))
+                .unreadOnly(Boolean.TRUE.equals(request.getUnreadOnly()))
                 .page(request.getPage())
                 .pageSize(request.getPageSize())
                 .build())));

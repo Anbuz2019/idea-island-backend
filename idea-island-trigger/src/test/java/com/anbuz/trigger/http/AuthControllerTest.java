@@ -17,7 +17,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -50,6 +53,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("stores the token and returns the register payload")
         void givenValidRequest_whenRegister_thenStoresTokenAndReturnsPayload() {
+            bindRequest("pc");
             IAuthController.RegisterRequest request = new IAuthController.RegisterRequest();
             request.setEmail("register@example.com");
             request.setPassword("password123");
@@ -65,7 +69,7 @@ class AuthControllerTest {
             assertThat(result.getData())
                     .extracting(IAuthController.RegisterResponse::userId, IAuthController.RegisterResponse::token)
                     .containsExactly(1L, "register-token");
-            verify(authTokenService).storeToken(1L, "register-token");
+            verify(authTokenService).storeToken(1L, "pc", "register-token");
         }
     }
 
@@ -76,6 +80,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("stores the token and returns the login payload")
         void givenValidRequest_whenLogin_thenStoresTokenAndReturnsPayload() {
+            bindRequest("mobile");
             IAuthController.LoginRequest request = new IAuthController.LoginRequest();
             request.setEmail("login@example.com");
             request.setPassword("password123");
@@ -92,7 +97,7 @@ class AuthControllerTest {
                             IAuthController.LoginResponse::nickname,
                             IAuthController.LoginResponse::token)
                     .containsExactly(2L, "reader", "login-token");
-            verify(authTokenService).storeToken(2L, "login-token");
+            verify(authTokenService).storeToken(2L, "mobile", "login-token");
         }
     }
 
@@ -145,6 +150,7 @@ class AuthControllerTest {
         @Test
         @DisplayName("verifies the code, stores the token, and returns the login payload")
         void givenValidPhoneCode_whenPhoneLogin_thenReturnsPayload() {
+            bindRequest(null);
             IAuthController.PhoneLoginRequest request = new IAuthController.PhoneLoginRequest();
             request.setPhone("13800138000");
             request.setCode("123456");
@@ -160,7 +166,7 @@ class AuthControllerTest {
             assertThat(result.getData())
                     .extracting(IAuthController.LoginResponse::userId, IAuthController.LoginResponse::token)
                     .containsExactly(3L, "phone-token");
-            verify(authTokenService).storeToken(3L, "phone-token");
+            verify(authTokenService).storeToken(3L, "web", "phone-token");
         }
 
         @Test
@@ -186,16 +192,25 @@ class AuthControllerTest {
         @Test
         @DisplayName("removes the current user's token")
         void givenCurrentUser_whenLogout_thenRemovesToken() {
+            bindRequest("mobile");
             UserContext.set(9L);
             try {
                 Result<Void> result = authController.logout();
 
                 assertThat(result).returns(0, Result::getCode);
-                verify(authTokenService).removeToken(9L);
+                verify(authTokenService).removeToken(9L, "mobile");
             } finally {
                 UserContext.clear();
             }
         }
+    }
+
+    private static void bindRequest(String clientType) {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        if (clientType != null) {
+            request.addHeader("X-Client-Type", clientType);
+        }
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
     }
 
 }

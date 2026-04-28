@@ -18,9 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * 状态流转领域服务，负责校验资料动作合法性并生成状态变更记录。
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -47,8 +44,16 @@ public class StatusTransitionService implements IStatusTransitionService {
 
         switch (action) {
             case MARK_READ -> {
-                assertStatus(current, MaterialStatus.INBOX, action);
-                material.setStatus(MaterialStatus.PENDING_REVIEW);
+                if (current == MaterialStatus.INBOX) {
+                    material.setStatus(MaterialStatus.PENDING_REVIEW);
+                    material.setInboxReadAt(now);
+                } else if (current == MaterialStatus.COLLECTED) {
+                    material.setCollectedReadAt(now);
+                } else {
+                    log.warn("Material mark-read rejected due to invalid status materialId={} currentStatus={}", materialId, current);
+                    throw new AppException(ErrorCode.INVALID_STATUS_TRANSITION,
+                            "当前状态 " + current + " 不支持标记已读");
+                }
             }
             case COLLECT -> {
                 if (current != MaterialStatus.INBOX
@@ -71,10 +76,11 @@ public class StatusTransitionService implements IStatusTransitionService {
                     material.setScore(score);
                 }
                 if (current == MaterialStatus.COLLECTED || current == MaterialStatus.ARCHIVED) {
-                    // Already settled materials can update review fields without changing their lifecycle state.
+                    // 已沉淀资料只更新评价信息，不改变生命周期状态。
                 } else if (hasComment && hasScore) {
                     material.setStatus(MaterialStatus.COLLECTED);
                     material.setCollectedAt(now);
+                    material.setCollectedReadAt(null);
                 } else {
                     material.setStatus(MaterialStatus.PENDING_REVIEW);
                 }
@@ -106,11 +112,13 @@ public class StatusTransitionService implements IStatusTransitionService {
                 material.setInvalidReason(null);
                 material.setInvalidAt(null);
                 material.setInboxAt(now);
+                material.setInboxReadAt(null);
             }
             case RESTORE_COLLECTED -> {
                 assertStatus(current, MaterialStatus.ARCHIVED, action);
                 material.setStatus(MaterialStatus.COLLECTED);
                 material.setArchivedAt(null);
+                material.setCollectedReadAt(null);
             }
             default -> throw new AppException(ErrorCode.PARAM_INVALID, "未知动作: " + action);
         }
@@ -152,5 +160,4 @@ public class StatusTransitionService implements IStatusTransitionService {
             }
         }
     }
-
 }

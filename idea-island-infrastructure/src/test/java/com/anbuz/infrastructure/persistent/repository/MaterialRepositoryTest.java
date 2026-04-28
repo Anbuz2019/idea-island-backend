@@ -252,6 +252,92 @@ class MaterialRepositoryTest {
                     .containsExactly(inboxId, pendingId, collectedId, archivedId);
             assertThat(materialRepository.countMaterials(query)).isEqualTo(4);
         }
+
+        @Test
+        @DisplayName("score sorting ranks materials globally across collected and archived statuses")
+        void givenCollectedAndArchivedMaterials_whenSortByScore_thenIgnoresStatusPriority() {
+            Material collected = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 7, 10, 0));
+            collected.setScore(new BigDecimal("7.0"));
+            Long collectedId = materialRepository.saveMaterial(collected);
+
+            Material archived = buildMaterial(MaterialStatus.ARCHIVED, LocalDateTime.of(2026, 4, 7, 9, 0));
+            archived.setScore(new BigDecimal("9.5"));
+            Long archivedId = materialRepository.saveMaterial(archived);
+
+            MaterialListQuery query = MaterialListQuery.builder()
+                    .userId(1L)
+                    .statuses(List.of(MaterialStatus.COLLECTED.getCode(), MaterialStatus.ARCHIVED.getCode()))
+                    .sortBy("score")
+                    .sortDirection("DESC")
+                    .page(1)
+                    .pageSize(20)
+                    .build();
+
+            assertThat(materialRepository.queryMaterials(query))
+                    .extracting(Material::getId)
+                    .containsExactly(archivedId, collectedId);
+        }
+
+        @Test
+        @DisplayName("statusAt sorting uses the current status entered time globally")
+        void givenMixedStatuses_whenSortByStatusAt_thenOrdersByDisplayedStatusTime() {
+            Material archived = buildMaterial(MaterialStatus.ARCHIVED, LocalDateTime.of(2026, 4, 8, 9, 0));
+            archived.setArchivedAt(LocalDateTime.of(2026, 4, 8, 11, 0));
+            Long archivedId = materialRepository.saveMaterial(archived);
+
+            Material collected = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 8, 10, 0));
+            collected.setCollectedAt(LocalDateTime.of(2026, 4, 8, 13, 0));
+            Long collectedId = materialRepository.saveMaterial(collected);
+
+            Material inbox = buildMaterial(MaterialStatus.INBOX, LocalDateTime.of(2026, 4, 8, 12, 0));
+            inbox.setInboxAt(LocalDateTime.of(2026, 4, 8, 12, 30));
+            Long inboxId = materialRepository.saveMaterial(inbox);
+
+            MaterialListQuery query = MaterialListQuery.builder()
+                    .userId(1L)
+                    .statuses(List.of(
+                            MaterialStatus.INBOX.getCode(),
+                            MaterialStatus.COLLECTED.getCode(),
+                            MaterialStatus.ARCHIVED.getCode()))
+                    .sortBy("statusAt")
+                    .sortDirection("DESC")
+                    .page(1)
+                    .pageSize(20)
+                    .build();
+
+            assertThat(materialRepository.queryMaterials(query))
+                    .extracting(Material::getId)
+                    .containsExactly(collectedId, inboxId, archivedId);
+        }
+
+        @Test
+        @DisplayName("score sorting treats unrated materials as zero")
+        void givenUnratedMaterials_whenSortByScoreDesc_thenPlacesThemAfterRatedMaterials() {
+            Material unrated = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 8, 10, 0));
+            unrated.setScore(null);
+            Long unratedId = materialRepository.saveMaterial(unrated);
+
+            Material lowScore = buildMaterial(MaterialStatus.ARCHIVED, LocalDateTime.of(2026, 4, 8, 11, 0));
+            lowScore.setScore(new BigDecimal("1.0"));
+            Long lowScoreId = materialRepository.saveMaterial(lowScore);
+
+            Material highScore = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 8, 12, 0));
+            highScore.setScore(new BigDecimal("9.0"));
+            Long highScoreId = materialRepository.saveMaterial(highScore);
+
+            MaterialListQuery query = MaterialListQuery.builder()
+                    .userId(1L)
+                    .statuses(List.of(MaterialStatus.COLLECTED.getCode(), MaterialStatus.ARCHIVED.getCode()))
+                    .sortBy("score")
+                    .sortDirection("DESC")
+                    .page(1)
+                    .pageSize(20)
+                    .build();
+
+            assertThat(materialRepository.queryMaterials(query))
+                    .extracting(Material::getId)
+                    .containsExactly(highScoreId, lowScoreId, unratedId);
+        }
     }
 
     @Nested

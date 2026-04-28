@@ -33,7 +33,9 @@ public class Material {
     private BigDecimal score;
     private String invalidReason;
     private LocalDateTime inboxAt;
+    private LocalDateTime inboxReadAt;
     private LocalDateTime collectedAt;
+    private LocalDateTime collectedReadAt;
     private LocalDateTime archivedAt;
     private LocalDateTime invalidAt;
     private LocalDateTime lastRetrievedAt;
