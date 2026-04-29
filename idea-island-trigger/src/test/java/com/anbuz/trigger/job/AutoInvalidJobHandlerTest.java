@@ -32,5 +32,13 @@ class AutoInvalidJobHandlerTest {
 
             verify(autoInvalidService).invalidateExpiredMaterials();
         }
+
+        @Test
+        @DisplayName("触发失效资料清理任务时，委托领域服务执行物理清理")
+        void givenPurgeJobTriggered_whenExecute_thenDelegatesToDomainService() {
+            autoInvalidJobHandler.purgeExpiredInvalidMaterials();
+
+            verify(autoInvalidService).purgeExpiredInvalidMaterials();
+        }
     }
 }

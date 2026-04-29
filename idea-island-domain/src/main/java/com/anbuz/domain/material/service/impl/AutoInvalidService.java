@@ -23,6 +23,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AutoInvalidService implements IAutoInvalidService {
 
+    private static final int INVALID_PURGE_RETENTION_MONTHS = 6;
+    private static final int INVALID_PURGE_BATCH_SIZE = 500;
+
     private final ITopicRepository topicRepository;
     private final IMaterialRepository materialRepository;
 
@@ -35,6 +38,27 @@ public class AutoInvalidService implements IAutoInvalidService {
             invalidateByRule(rule, LocalDateTime.now());
         }
         log.info("Auto invalid scan completed ruleCount={}", rules.size());
+    }
+
+    @Override
+    @Transactional
+    public int purgeExpiredInvalidMaterials() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threshold = now.minusMonths(INVALID_PURGE_RETENTION_MONTHS);
+        int total = 0;
+        while (true) {
+            List<Material> materials = materialRepository.findInvalidMaterialsBefore(threshold, INVALID_PURGE_BATCH_SIZE);
+            if (materials.isEmpty()) {
+                break;
+            }
+            purgeMaterials(materials, now);
+            total += materials.size();
+            if (materials.size() < INVALID_PURGE_BATCH_SIZE) {
+                break;
+            }
+        }
+        log.info("Invalid material purge completed threshold={} count={}", threshold, total);
+        return total;
     }
 
     private void invalidateByRule(TopicAutoInvalidRule rule, LocalDateTime now) {
@@ -67,5 +91,23 @@ public class AutoInvalidService implements IAutoInvalidService {
             materialRepository.deleteTags(material.getId());
         }
         log.info("Auto invalid batch completed count={} reason={}", materials.size(), reason);
+    }
+
+    private void purgeMaterials(List<Material> materials, LocalDateTime now) {
+        for (Material material : materials) {
+            materialRepository.deletePermanently(material.getId());
+            if (!Boolean.TRUE.equals(material.getDeleted())) {
+                decrementTopicMaterialCount(material.getTopicId(), now);
+            }
+        }
+    }
+
+    private void decrementTopicMaterialCount(Long topicId, LocalDateTime now) {
+        topicRepository.findTopicById(topicId).ifPresent(topic -> {
+            int currentCount = topic.getMaterialCount() == null ? 0 : topic.getMaterialCount();
+            topic.setMaterialCount(Math.max(currentCount - 1, 0));
+            topic.setUpdatedAt(now);
+            topicRepository.updateTopic(topic);
+        });
     }
 }

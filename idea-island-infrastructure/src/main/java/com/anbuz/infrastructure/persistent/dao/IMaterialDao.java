@@ -21,6 +21,8 @@ public interface IMaterialDao {
 
     void update(MaterialPO material);
 
+    void deleteById(@Param("id") Long id);
+
     void clearInvalidation(@Param("id") Long id, @Param("updatedAt") LocalDateTime updatedAt);
 
     void clearArchivedAt(@Param("id") Long id, @Param("updatedAt") LocalDateTime updatedAt);
@@ -48,5 +50,9 @@ public interface IMaterialDao {
             @Param("topicId") Long topicId,
             @Param("status") String status,
             @Param("threshold") LocalDateTime threshold);
+
+    List<MaterialPO> selectInvalidBefore(
+            @Param("threshold") LocalDateTime threshold,
+            @Param("limit") int limit);
 
 }

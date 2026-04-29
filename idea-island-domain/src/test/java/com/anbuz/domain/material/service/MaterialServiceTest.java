@@ -668,8 +668,8 @@ class MaterialServiceTest {
     class DeleteMaterial {
 
         @Test
-        @DisplayName("marks invalid material deleted and decrements topic count")
-        void givenInvalidMaterial_whenDeleteMaterial_thenMarksDeletedAndUpdatesTopicCount() {
+        @DisplayName("permanently deletes invalid material and decrements topic count")
+        void givenInvalidMaterial_whenDeleteMaterial_thenDeletesPermanentlyAndUpdatesTopicCount() {
             Material material = buildMaterial();
             material.setStatus(MaterialStatus.INVALID);
             Topic topic = buildTopic(1, 2);
@@ -678,14 +678,9 @@ class MaterialServiceTest {
 
             materialService.deleteMaterial(USER_ID, MATERIAL_ID);
 
-            ArgumentCaptor<Material> materialCaptor = ArgumentCaptor.forClass(Material.class);
             ArgumentCaptor<Topic> topicCaptor = ArgumentCaptor.forClass(Topic.class);
-            verify(materialRepository).updateMaterial(materialCaptor.capture());
+            verify(materialRepository).deletePermanently(MATERIAL_ID);
             verify(topicRepository).updateTopic(topicCaptor.capture());
-            assertThat(materialCaptor.getValue())
-                    .returns(true, Material::getDeleted)
-                    .satisfies(deleted -> assertThat(deleted.getDeletedAt()).isNotNull())
-                    .satisfies(deleted -> assertThat(deleted.getUpdatedAt()).isNotNull());
             assertThat(topicCaptor.getValue())
                     .returns(1, Topic::getMaterialCount)
                     .satisfies(updated -> assertThat(updated.getUpdatedAt()).isNotNull());
@@ -701,7 +696,7 @@ class MaterialServiceTest {
                     .extracting("code", "message")
                     .containsExactly(ErrorCode.BUSINESS_CONFLICT.getCode(), "仅失效状态资料允许删除");
 
-            verify(materialRepository, never()).updateMaterial(any(Material.class));
+            verify(materialRepository, never()).deletePermanently(any());
             verify(topicRepository, never()).updateTopic(any(Topic.class));
         }
     }

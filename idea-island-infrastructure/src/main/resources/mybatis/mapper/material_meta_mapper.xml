@@ -44,4 +44,8 @@
         SELECT * FROM material_meta WHERE material_id = #{materialId}
     </select>
 
+    <delete id="deleteByMaterialId">
+        DELETE FROM material_meta WHERE material_id = #{materialId}
+    </delete>
+
 </mapper>

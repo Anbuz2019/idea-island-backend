@@ -59,7 +59,7 @@ public interface IMaterialController {
     Result<MaterialDetailResponse> updateMeta(@Parameter(description = "资料 ID", required = true) @PathVariable Long id,
                                               @Valid @RequestBody UpdateMetaRequest req);
 
-    @Operation(summary = "删除资料", description = "逻辑删除资料；仅失效状态资料允许删除")
+    @Operation(summary = "永久删除资料", description = "物理删除资料及其元信息、标签关系；仅失效状态资料允许删除")
     @DeleteMapping("/{id}")
     Result<Void> delete(@Parameter(description = "资料 ID", required = true) @PathVariable Long id);
 

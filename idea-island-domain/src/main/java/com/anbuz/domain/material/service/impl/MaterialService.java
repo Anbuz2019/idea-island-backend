@@ -244,17 +244,8 @@ public class MaterialService implements IMaterialService {
         if (material.getStatus() != MaterialStatus.INVALID) {
             throw new AppException(ErrorCode.BUSINESS_CONFLICT, "仅失效状态资料允许删除");
         }
-        LocalDateTime now = LocalDateTime.now();
-        material.setDeleted(true);
-        material.setDeletedAt(now);
-        material.setUpdatedAt(now);
-        materialRepository.updateMaterial(material);
-
-        Topic topic = getOwnedTopic(material.getTopicId(), userId);
-        int currentCount = topic.getMaterialCount() == null ? 0 : topic.getMaterialCount();
-        topic.setMaterialCount(Math.max(currentCount - 1, 0));
-        topic.setUpdatedAt(now);
-        topicRepository.updateTopic(topic);
+        materialRepository.deletePermanently(materialId);
+        decrementTopicMaterialCount(material.getTopicId(), LocalDateTime.now());
         log.info("Delete material succeeded userId={} materialId={} topicId={}", userId, materialId, material.getTopicId());
     }
 
@@ -552,6 +543,15 @@ public class MaterialService implements IMaterialService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
         return topic;
+    }
+
+    private void decrementTopicMaterialCount(Long topicId, LocalDateTime now) {
+        topicRepository.findTopicById(topicId).ifPresent(topic -> {
+            int currentCount = topic.getMaterialCount() == null ? 0 : topic.getMaterialCount();
+            topic.setMaterialCount(Math.max(currentCount - 1, 0));
+            topic.setUpdatedAt(now);
+            topicRepository.updateTopic(topic);
+        });
     }
 
 }

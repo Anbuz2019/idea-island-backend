@@ -4,6 +4,7 @@ import com.anbuz.domain.material.service.IAutoInvalidService;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 /**
@@ -21,6 +22,18 @@ public class AutoInvalidJobHandler {
         log.info("自动失效任务开始执行");
         autoInvalidService.invalidateExpiredMaterials();
         log.info("自动失效任务执行完毕");
+    }
+
+    @XxlJob("purgeInvalidMaterialsJobHandler")
+    public void purgeExpiredInvalidMaterials() {
+        log.info("失效资料清理任务开始执行");
+        int count = autoInvalidService.purgeExpiredInvalidMaterials();
+        log.info("失效资料清理任务执行完毕 count={}", count);
+    }
+
+    @Scheduled(cron = "${idea-island.jobs.purge-invalid.cron:0 30 3 * * *}")
+    public void scheduledPurgeExpiredInvalidMaterials() {
+        purgeExpiredInvalidMaterials();
     }
 
 }

@@ -6,4 +6,6 @@ package com.anbuz.domain.material.service;
 public interface IAutoInvalidService {
 
     void invalidateExpiredMaterials();
+
+    int purgeExpiredInvalidMaterials();
 }

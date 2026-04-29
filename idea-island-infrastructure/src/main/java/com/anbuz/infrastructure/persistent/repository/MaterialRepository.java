@@ -57,6 +57,13 @@ public class MaterialRepository implements IMaterialRepository {
     }
 
     @Override
+    public void deletePermanently(Long materialId) {
+        materialTagDao.deleteByMaterialId(materialId);
+        materialMetaDao.deleteByMaterialId(materialId);
+        materialDao.deleteById(materialId);
+    }
+
+    @Override
     public void clearInvalidation(Long materialId, LocalDateTime updatedAt) {
         materialDao.clearInvalidation(materialId, updatedAt);
     }
@@ -166,6 +173,12 @@ public class MaterialRepository implements IMaterialRepository {
     public List<Material> findByTopicIdAndStatusAndUpdatedAtBefore(
             Long topicId, MaterialStatus status, LocalDateTime threshold) {
         return materialDao.selectByStatusAndUpdatedAtBefore(topicId, status.getCode(), threshold)
+                .stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Material> findInvalidMaterialsBefore(LocalDateTime threshold, int limit) {
+        return materialDao.selectInvalidBefore(threshold, limit)
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
 

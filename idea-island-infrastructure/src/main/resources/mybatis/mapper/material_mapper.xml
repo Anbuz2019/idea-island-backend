@@ -66,6 +66,10 @@
         WHERE id = #{id}
     </update>
 
+    <delete id="deleteById">
+        DELETE FROM material WHERE id = #{id}
+    </delete>
+
     <update id="clearInvalidation">
         UPDATE material
         SET invalid_reason = NULL,
@@ -264,6 +268,15 @@
           AND status = #{status}
           AND updated_at &lt; #{threshold}
           AND is_deleted = 0
+    </select>
+
+    <select id="selectInvalidBefore" resultMap="materialMap">
+        SELECT * FROM material
+        WHERE status = 'INVALID'
+          AND invalid_at IS NOT NULL
+          AND invalid_at &lt; #{threshold}
+        ORDER BY invalid_at ASC, id ASC
+        LIMIT #{limit}
     </select>
 
 </mapper>

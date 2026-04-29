@@ -16,6 +16,8 @@ public interface IMaterialMetaDao {
 
     void update(MaterialMetaPO meta);
 
+    void deleteByMaterialId(@Param("materialId") Long materialId);
+
     Optional<MaterialMetaPO> selectByMaterialId(@Param("materialId") Long materialId);
 
 }

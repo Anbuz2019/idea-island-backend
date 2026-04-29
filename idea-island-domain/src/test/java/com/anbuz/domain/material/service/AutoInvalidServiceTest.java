@@ -3,6 +3,7 @@ package com.anbuz.domain.material.service;
 import com.anbuz.domain.material.model.entity.Material;
 import com.anbuz.domain.material.repository.IMaterialRepository;
 import com.anbuz.domain.material.service.impl.AutoInvalidService;
+import com.anbuz.domain.topic.model.entity.Topic;
 import com.anbuz.domain.topic.model.entity.TopicAutoInvalidRule;
 import com.anbuz.domain.topic.repository.ITopicRepository;
 import com.anbuz.types.enums.MaterialStatus;
@@ -17,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -109,6 +111,40 @@ class AutoInvalidServiceTest {
             verify(materialRepository, never()).findByTopicIdAndStatusAndInboxAtBefore(any(), any(), any());
             verify(materialRepository, never()).findByTopicIdAndStatusAndUpdatedAtBefore(any(), any(), any());
             verify(materialRepository, never()).updateMaterial(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("清理过期失效资料")
+    class PurgeExpiredInvalidMaterials {
+
+        @Test
+        @DisplayName("清理超过保留期的失效资料并扣减主题资料数")
+        void givenExpiredInvalidMaterial_whenPurgeExpiredInvalidMaterials_thenDeletesPermanently() {
+            Material material = Material.builder()
+                    .id(100L)
+                    .topicId(10L)
+                    .status(MaterialStatus.INVALID)
+                    .deleted(false)
+                    .build();
+            Topic topic = Topic.builder()
+                    .id(10L)
+                    .materialCount(3)
+                    .build();
+            when(materialRepository.findInvalidMaterialsBefore(any(LocalDateTime.class), eq(500)))
+                    .thenReturn(List.of(material))
+                    .thenReturn(List.of());
+            when(topicRepository.findTopicById(10L)).thenReturn(Optional.of(topic));
+
+            int count = autoInvalidService.purgeExpiredInvalidMaterials();
+
+            ArgumentCaptor<Topic> topicCaptor = ArgumentCaptor.forClass(Topic.class);
+            assertThat(count).isEqualTo(1);
+            verify(materialRepository).deletePermanently(100L);
+            verify(topicRepository).updateTopic(topicCaptor.capture());
+            assertThat(topicCaptor.getValue())
+                    .returns(2, Topic::getMaterialCount)
+                    .satisfies(updated -> assertThat(updated.getUpdatedAt()).isNotNull());
         }
     }
 }

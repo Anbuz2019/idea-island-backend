@@ -24,6 +24,8 @@ public interface IMaterialRepository {
 
     void updateMaterial(Material material);
 
+    void deletePermanently(Long materialId);
+
     void clearInvalidation(Long materialId, LocalDateTime updatedAt);
 
     void clearArchivedAt(Long materialId, LocalDateTime updatedAt);
@@ -62,5 +64,7 @@ public interface IMaterialRepository {
     List<Material> findByTopicIdAndStatusAndInboxAtBefore(Long topicId, MaterialStatus status, LocalDateTime threshold);
 
     List<Material> findByTopicIdAndStatusAndUpdatedAtBefore(Long topicId, MaterialStatus status, LocalDateTime threshold);
+
+    List<Material> findInvalidMaterialsBefore(LocalDateTime threshold, int limit);
 
 }

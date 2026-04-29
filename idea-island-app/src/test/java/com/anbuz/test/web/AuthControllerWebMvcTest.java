@@ -224,7 +224,7 @@ class AuthControllerWebMvcTest {
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.code").value(0));
 
-            verify(authTokenService).removeToken(9L);
+            verify(authTokenService).removeToken(9L, "web");
         }
     }
 
