@@ -402,6 +402,36 @@ class MaterialRepositoryTest {
         }
     }
 
+    @Nested
+    @DisplayName("update material")
+    class UpdateMaterial {
+
+        @Test
+        @DisplayName("persists editable detail fields")
+        void givenEditedMaterial_whenUpdate_thenCanFindUpdatedFields() {
+            LocalDateTime createdAt = LocalDateTime.of(2026, 4, 1, 10, 0);
+            Material material = buildMaterial(MaterialStatus.PENDING_REVIEW, createdAt);
+            Long materialId = materialRepository.saveMaterial(material);
+            LocalDateTime updatedAt = LocalDateTime.of(2026, 4, 2, 10, 0);
+            material.setId(materialId);
+            material.setMaterialType(MaterialType.MEDIA);
+            material.setDescription("updated description");
+            material.setComment("updated comment");
+            material.setScore(new BigDecimal("8.0"));
+            material.setUpdatedAt(updatedAt);
+
+            materialRepository.updateMaterial(material);
+
+            assertThat(materialRepository.findById(materialId))
+                    .hasValueSatisfying(found -> assertThat(found)
+                            .returns(MaterialType.MEDIA, Material::getMaterialType)
+                            .returns("updated description", Material::getDescription)
+                            .returns("updated comment", Material::getComment)
+                            .returns(new BigDecimal("8.0"), Material::getScore)
+                            .returns(updatedAt, Material::getUpdatedAt));
+        }
+    }
+
     private Material buildMaterial(MaterialStatus status, LocalDateTime time) {
         return Material.builder()
                 .userId(1L)

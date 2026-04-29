@@ -538,6 +538,39 @@ class MaterialServiceTest {
         }
 
         @Test
+        @DisplayName("updates editable detail fields without collecting material")
+        void givenEvaluationFields_whenUpdateBasic_thenDoesNotCollectMaterial() {
+            Material material = buildMaterial();
+            material.setStatus(MaterialStatus.PENDING_REVIEW);
+            material.setMaterialType(MaterialType.ARTICLE);
+            material.setDescription("old description");
+            material.setComment("old comment");
+            material.setScore(new BigDecimal("3.0"));
+            when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(material));
+            when(materialRepository.findMetaByMaterialId(MATERIAL_ID)).thenReturn(Optional.empty());
+            when(materialRepository.findTagsByMaterialId(MATERIAL_ID)).thenReturn(List.of());
+
+            materialService.updateBasic(USER_ID, MATERIAL_ID,
+                    IMaterialService.UpdateBasicCommand.builder()
+                            .materialType("media")
+                            .description("new description")
+                            .comment("new comment")
+                            .score(new BigDecimal("8.0"))
+                            .build());
+
+            ArgumentCaptor<Material> materialCaptor = ArgumentCaptor.forClass(Material.class);
+            verify(materialRepository).updateMaterial(materialCaptor.capture());
+            assertThat(materialCaptor.getValue())
+                    .returns(MaterialStatus.PENDING_REVIEW, Material::getStatus)
+                    .returns(MaterialType.MEDIA, Material::getMaterialType)
+                    .returns("new description", Material::getDescription)
+                    .returns("new comment", Material::getComment)
+                    .returns(new BigDecimal("8.0"), Material::getScore);
+            verify(systemTagService).refreshSystemTags(MATERIAL_ID, new BigDecimal("8.0"), "new comment");
+            verify(statusTransitionService, never()).transit(any(), any(), eq(MaterialAction.COLLECT), any(), any(), any());
+        }
+
+        @Test
         @DisplayName("syncs existing meta word count when raw content changes")
         void givenRawContentAndExistingMeta_whenUpdateBasic_thenSyncsWordCount() {
             Material material = buildMaterial();
@@ -792,8 +825,8 @@ class MaterialServiceTest {
         }
 
         @Test
-        @DisplayName("rejects missing required tag group")
-        void givenRequiredGroupNotFilled_whenUpdateTags_thenThrowsBusinessConflict() {
+        @DisplayName("allows partial required tags when only updating tags")
+        void givenRequiredGroupNotFilled_whenUpdateTags_thenPersistsPartialTags() {
             when(materialRepository.findById(MATERIAL_ID)).thenReturn(Optional.of(buildMaterial()));
             when(topicRepository.findTagGroupsByTopicId(TOPIC_ID)).thenReturn(List.of(
                     buildGroup(GROUP_ID, false, false),
@@ -801,13 +834,17 @@ class MaterialServiceTest {
             when(topicRepository.findTagValuesByGroupId(GROUP_ID)).thenReturn(List.of(buildValue(GROUP_ID, "analysis")));
             when(topicRepository.findTagValuesByGroupId(SECOND_GROUP_ID)).thenReturn(List.of(buildValue(SECOND_GROUP_ID, "must")));
 
-            assertThatThrownBy(() -> materialService.updateTags(USER_ID, MATERIAL_ID,
-                    List.of(new IMaterialService.TagInput(String.valueOf(GROUP_ID), "analysis"))))
-                    .isInstanceOf(AppException.class)
-                    .extracting("code", "message")
-                    .containsExactly(ErrorCode.BUSINESS_CONFLICT.getCode(), "必填标签组未填写: Stage-" + SECOND_GROUP_ID);
+            materialService.updateTags(USER_ID, MATERIAL_ID,
+                    List.of(new IMaterialService.TagInput(String.valueOf(GROUP_ID), "analysis")));
 
-            verify(materialRepository, never()).deleteUserTags(MATERIAL_ID);
+            ArgumentCaptor<List<MaterialTag>> tagsCaptor = ArgumentCaptor.forClass(List.class);
+            verify(materialRepository).deleteUserTags(MATERIAL_ID);
+            verify(materialRepository).saveTags(tagsCaptor.capture());
+            verify(systemTagService).refreshSystemTags(MATERIAL_ID, null, null);
+            assertThat(tagsCaptor.getValue())
+                    .singleElement()
+                    .returns(String.valueOf(GROUP_ID), MaterialTag::getTagGroupKey)
+                    .returns("analysis", MaterialTag::getTagValue);
         }
 
         @Test

@@ -175,8 +175,14 @@ public class MaterialService implements IMaterialService {
             log.warn("Update material basic rejected due to invalid status userId={} materialId={}", userId, materialId);
             throw new AppException(ErrorCode.BUSINESS_CONFLICT, "已失效资料不可编辑");
         }
+        if (command.getMaterialType() != null) {
+            material.setMaterialType(MaterialType.of(command.getMaterialType()));
+        }
         if (command.getTitle() != null) {
             material.setTitle(command.getTitle());
+        }
+        if (command.getDescription() != null) {
+            material.setDescription(command.getDescription());
         }
         if (command.getRawContent() != null) {
             material.setRawContent(command.getRawContent());
@@ -184,11 +190,20 @@ public class MaterialService implements IMaterialService {
         if (command.getSourceUrl() != null) {
             material.setSourceUrl(command.getSourceUrl());
         }
+        if (command.getComment() != null) {
+            material.setComment(command.getComment());
+        }
+        if (command.getScore() != null) {
+            material.setScore(command.getScore());
+        }
         LocalDateTime now = LocalDateTime.now();
         material.setUpdatedAt(now);
         materialRepository.updateMaterial(material);
         if (command.getRawContent() != null) {
             syncWordCount(materialId, command.getRawContent(), now);
+        }
+        if (command.getScore() != null || command.getComment() != null) {
+            systemTagService.refreshSystemTags(materialId, command.getScore(), command.getComment());
         }
         log.info("Update material basic succeeded userId={} materialId={}", userId, materialId);
         return buildAggregate(material);
@@ -271,7 +286,6 @@ public class MaterialService implements IMaterialService {
         List<TagInput> safeTags = tags == null ? List.of() : tags;
         Map<Long, Integer> tagCountByGroup = new HashMap<>();
         Map<String, Set<String>> selectedValuesByGroup = new HashMap<>();
-        Set<Long> filledGroups = new HashSet<>();
         List<TagInput> normalizedTags = new ArrayList<>(safeTags.size());
         for (TagInput tag : safeTags) {
             if (tag == null) {
@@ -309,14 +323,7 @@ public class MaterialService implements IMaterialService {
             if (Boolean.TRUE.equals(group.getExclusive()) && tagCountByGroup.get(groupId) > 1) {
                 throw new AppException(ErrorCode.BUSINESS_CONFLICT, "互斥标签组只允许选择一个值: " + group.getName());
             }
-            filledGroups.add(groupId);
             normalizedTags.add(new TagInput(storedTagGroupKey, tag.getTagValue()));
-        }
-
-        for (UserTagGroup group : groups) {
-            if (Boolean.TRUE.equals(group.getRequired()) && !filledGroups.contains(group.getId())) {
-                throw new AppException(ErrorCode.BUSINESS_CONFLICT, "必填标签组未填写: " + group.getName());
-            }
         }
 
         if (replaceExisting) {

@@ -267,9 +267,13 @@ class MaterialControllerTest {
         @DisplayName("maps the request into an update command and returns the updated detail")
         void givenBasicFields_whenUpdateBasic_thenDelegatesWithUpdateCommand() {
             IMaterialController.UpdateBasicRequest request = new IMaterialController.UpdateBasicRequest();
+            request.setMaterialType("media");
             request.setTitle("Updated Redis notes");
+            request.setDescription("updated description");
             request.setRawContent("new content");
             request.setSourceUrl("https://example.com/updated");
+            request.setComment("updated comment");
+            request.setScore(new BigDecimal("8.0"));
 
             when(materialService.updateBasic(eq(1L), eq(100L), any()))
                     .thenReturn(buildAggregate("Updated Redis notes", "tester"));
@@ -283,9 +287,13 @@ class MaterialControllerTest {
                 verify(materialService).updateBasic(eq(1L), eq(100L), captor.capture());
 
                 assertThat(captor.getValue())
+                        .returns("media", IMaterialService.UpdateBasicCommand::getMaterialType)
                         .returns("Updated Redis notes", IMaterialService.UpdateBasicCommand::getTitle)
+                        .returns("updated description", IMaterialService.UpdateBasicCommand::getDescription)
                         .returns("new content", IMaterialService.UpdateBasicCommand::getRawContent)
-                        .returns("https://example.com/updated", IMaterialService.UpdateBasicCommand::getSourceUrl);
+                        .returns("https://example.com/updated", IMaterialService.UpdateBasicCommand::getSourceUrl)
+                        .returns("updated comment", IMaterialService.UpdateBasicCommand::getComment)
+                        .returns(new BigDecimal("8.0"), IMaterialService.UpdateBasicCommand::getScore);
                 assertThat(result.getData().material())
                         .returns("Updated Redis notes", IMaterialController.MaterialResponse::title);
             } finally {

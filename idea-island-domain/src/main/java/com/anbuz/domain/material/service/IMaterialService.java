@@ -72,9 +72,13 @@ public interface IMaterialService {
     @NoArgsConstructor
     @AllArgsConstructor
     class UpdateBasicCommand {
+        private String materialType;
         private String title;
+        private String description;
         private String rawContent;
         private String sourceUrl;
+        private String comment;
+        private BigDecimal score;
     }
 
     @Data

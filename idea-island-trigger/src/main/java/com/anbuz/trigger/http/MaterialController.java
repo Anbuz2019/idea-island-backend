@@ -85,13 +85,18 @@ public class MaterialController implements IMaterialController {
     @Override
     public Result<MaterialDetailResponse> updateBasic(@PathVariable Long id, @Valid @RequestBody UpdateBasicRequest req) {
         Long userId = UserContext.currentUserId();
-        log.info("Update material basic requested userId={} materialId={} titleChanged={} contentChanged={} sourceUrlChanged={}",
-                userId, id, req.getTitle() != null, req.getRawContent() != null, req.getSourceUrl() != null);
+        log.info("Update material basic requested userId={} materialId={} typeChanged={} titleChanged={} descriptionChanged={} contentChanged={} sourceUrlChanged={} commentChanged={} scoreChanged={}",
+                userId, id, req.getMaterialType() != null, req.getTitle() != null, req.getDescription() != null,
+                req.getRawContent() != null, req.getSourceUrl() != null, req.getComment() != null, req.getScore() != null);
         MaterialDetailResponse response = MaterialApiMapper.toDetailResponse(materialService.updateBasic(userId, id,
                 IMaterialService.UpdateBasicCommand.builder()
+                        .materialType(req.getMaterialType())
                         .title(req.getTitle())
+                        .description(req.getDescription())
                         .rawContent(req.getRawContent())
                         .sourceUrl(req.getSourceUrl())
+                        .comment(req.getComment())
+                        .score(req.getScore())
                         .build()));
         log.info("Update material basic succeeded userId={} materialId={}", userId, id);
         return Result.ok(response);

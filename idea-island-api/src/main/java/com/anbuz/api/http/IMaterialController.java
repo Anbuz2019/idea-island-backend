@@ -179,15 +179,29 @@ public interface IMaterialController {
     @Schema(description = "编辑资料基本信息请求")
     @Data
     class UpdateBasicRequest {
+        @Schema(description = "Material type code")
+        @Size(max = 20)
+        private String materialType;
         @Schema(description = "标题")
         @Size(max = 200)
         private String title;
+        @Schema(description = "Description")
+        @Size(max = 500)
+        private String description;
         @Schema(description = "原始正文内容")
         @Size(max = 50000)
         private String rawContent;
         @Schema(description = "来源链接")
         @Size(max = 2000)
         private String sourceUrl;
+        @Schema(description = "Comment")
+        @Size(max = 2000)
+        private String comment;
+        @Schema(description = "Score")
+        @DecimalMin("0.0")
+        @DecimalMax("10.0")
+        @Digits(integer = 2, fraction = 1)
+        private BigDecimal score;
     }
 
     @Schema(description = "补全资料元信息请求")
