@@ -41,11 +41,11 @@ public class ContentProcessService implements IContentProcessService {
                         .updatedAt(LocalDateTime.now())
                         .build());
 
-        if (meta.getThumbnailKey() == null) {
+        if (!hasText(meta.getThumbnailKey())) {
             populateThumbnail(material, meta);
         }
 
-        if (material.getTitle() == null && material.getSourceUrl() != null) {
+        if (!hasText(material.getTitle()) && hasText(material.getSourceUrl())) {
             urlParserAdapter.extractOgTitle(material.getSourceUrl())
                     .ifPresent(title -> {
                         material.setTitle(title);
@@ -65,11 +65,11 @@ public class ContentProcessService implements IContentProcessService {
     }
 
     private void populateThumbnail(Material material, MaterialMeta meta) {
-        if (material.getMaterialType() == MaterialType.IMAGE && material.getFileKey() != null) {
+        if (material.getMaterialType() == MaterialType.IMAGE && hasText(material.getFileKey())) {
             meta.setThumbnailKey(material.getFileKey());
             return;
         }
-        if (material.getSourceUrl() != null) {
+        if (hasText(material.getSourceUrl())) {
             tryGenerateCover(material, meta);
         }
     }
@@ -77,7 +77,7 @@ public class ContentProcessService implements IContentProcessService {
     private void tryGenerateCover(Material material, MaterialMeta meta) {
         try {
             String coverKey = null;
-            if (material.getSourceUrl() != null) {
+            if (hasText(material.getSourceUrl())) {
                 String ogImage = urlParserAdapter.extractOgImage(material.getSourceUrl()).orElse(null);
                 if (ogImage != null) {
                     coverKey = coverStorageAdapter.downloadAndUploadCover(ogImage, "cover_" + material.getId() + ".jpg");
@@ -89,5 +89,9 @@ public class ContentProcessService implements IContentProcessService {
         } catch (Exception e) {
             log.warn("Cover generation failed materialId={}", material.getId(), e);
         }
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 }
