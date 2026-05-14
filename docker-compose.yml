@@ -92,6 +92,10 @@ services:
 
 volumes:
   mysql_data:
+    name: ${MYSQL_VOLUME_NAME:-idea-island-backend_mysql_data}
   redis_data:
+    name: ${REDIS_VOLUME_NAME:-idea-island-backend_redis_data}
   app_logs:
+    name: ${APP_LOGS_VOLUME_NAME:-idea-island-backend_app_logs}
   app_data_logs:
+    name: ${APP_DATA_LOGS_VOLUME_NAME:-idea-island-backend_app_data_logs}
