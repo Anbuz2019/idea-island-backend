@@ -55,4 +55,6 @@ public interface IMaterialDao {
             @Param("threshold") LocalDateTime threshold,
             @Param("limit") int limit);
 
+    List<MaterialPO> selectMissingThumbnailCandidates(@Param("limit") int limit);
+
 }

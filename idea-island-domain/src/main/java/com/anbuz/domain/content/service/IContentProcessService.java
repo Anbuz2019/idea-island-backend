@@ -6,4 +6,6 @@ package com.anbuz.domain.content.service;
 public interface IContentProcessService {
 
     void process(Long materialId);
+
+    int backfillMissingCovers(int limit);
 }

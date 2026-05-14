@@ -79,6 +79,23 @@ cos:
   region: ${COS_REGION}
   base-url: ${COS_BASE_URL:}
 
+link-preview:
+  enabled: ${LINKPREVIEW_ENABLED:false}
+  api-key: ${LINKPREVIEW_API_KEY:}
+  endpoint: ${LINKPREVIEW_ENDPOINT:https://api.linkpreview.net}
+  timeout-ms: ${LINKPREVIEW_TIMEOUT_MS:8000}
+
+bilibili-preview:
+  enabled: ${BILIBILI_PREVIEW_ENABLED:true}
+  timeout-ms: ${BILIBILI_PREVIEW_TIMEOUT_MS:8000}
+
+idea-island:
+  jobs:
+    timezone: ${JOB_TIMEZONE:Asia/Shanghai}
+    cover-backfill:
+      cron: ${COVER_BACKFILL_CRON:0 */5 * * * *}
+      limit: ${COVER_BACKFILL_LIMIT:50}
+
 logging:
   level:
     root: info

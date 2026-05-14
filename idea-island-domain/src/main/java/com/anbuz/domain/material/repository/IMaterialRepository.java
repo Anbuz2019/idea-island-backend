@@ -67,4 +67,6 @@ public interface IMaterialRepository {
 
     List<Material> findInvalidMaterialsBefore(LocalDateTime threshold, int limit);
 
+    List<Material> findMaterialsMissingThumbnail(int limit);
+
 }

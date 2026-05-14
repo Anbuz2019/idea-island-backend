@@ -11,6 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.UUID;
 
@@ -59,6 +60,10 @@ public class CosCoverStorageAdapter implements ICoverStorageAdapter {
             connection.setInstanceFollowRedirects(true);
             connection.setRequestProperty("User-Agent", USER_AGENT);
             connection.setRequestProperty("Accept", "image/avif,image/webp,image/apng,image/*,*/*;q=0.8");
+            String referer = refererFor(imageUrl);
+            if (referer != null) {
+                connection.setRequestProperty("Referer", referer);
+            }
             int status = connection.getResponseCode();
             if (status >= 400) {
                 throw new IOException("remote status " + status);
@@ -92,6 +97,22 @@ public class CosCoverStorageAdapter implements ICoverStorageAdapter {
                 output.write(buffer, 0, read);
             }
             return output.toByteArray();
+        }
+    }
+
+    private String refererFor(String imageUrl) {
+        try {
+            String host = URI.create(imageUrl).getHost();
+            if (host == null) {
+                return null;
+            }
+            String lowerHost = host.toLowerCase();
+            if (lowerHost.endsWith("hdslb.com") || lowerHost.endsWith("biliimg.com")) {
+                return "https://www.bilibili.com/";
+            }
+            return null;
+        } catch (Exception ignored) {
+            return null;
         }
     }
 

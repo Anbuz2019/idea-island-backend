@@ -182,6 +182,12 @@ public class MaterialRepository implements IMaterialRepository {
                 .stream().map(this::toDomain).collect(Collectors.toList());
     }
 
+    @Override
+    public List<Material> findMaterialsMissingThumbnail(int limit) {
+        return materialDao.selectMissingThumbnailCandidates(limit)
+                .stream().map(this::toDomain).collect(Collectors.toList());
+    }
+
     private MaterialPO toPO(Material m) {
         return MaterialPO.builder()
                 .id(m.getId())

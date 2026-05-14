@@ -280,4 +280,21 @@
         LIMIT #{limit}
     </select>
 
+    <select id="selectMissingThumbnailCandidates" resultMap="materialMap">
+        SELECT m.*
+        FROM material m
+        LEFT JOIN material_meta mm ON mm.material_id = m.id
+        WHERE m.is_deleted = 0
+          AND m.status != 'INVALID'
+          AND m.source_url IS NOT NULL
+          AND m.source_url != ''
+          AND (mm.id IS NULL OR mm.thumbnail_key IS NULL OR mm.thumbnail_key = '')
+          AND (
+              mm.extra_json IS NULL
+              OR mm.extra_json NOT LIKE '%"coverBackfillStatus":"unavailable"%'
+          )
+        ORDER BY m.updated_at DESC, m.id DESC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

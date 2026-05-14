@@ -379,6 +379,51 @@ class MaterialRepositoryTest {
     }
 
     @Nested
+    @DisplayName("missing thumbnail candidates")
+    class MissingThumbnailCandidates {
+
+        @Test
+        @DisplayName("finds only active linked materials without thumbnail and without unavailable marker")
+        void givenMixedMaterials_whenFindMissingThumbnail_thenSkipsResolvedInvalidAndUnavailable() {
+            Material target = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 10, 10, 0));
+            target.setSourceUrl("https://example.com/a");
+            Long targetId = materialRepository.saveMaterial(target);
+
+            Material noLink = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 10, 11, 0));
+            noLink.setSourceUrl(null);
+            materialRepository.saveMaterial(noLink);
+
+            Material hasCover = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 10, 12, 0));
+            hasCover.setSourceUrl("https://example.com/covered");
+            Long hasCoverId = materialRepository.saveMaterial(hasCover);
+            materialRepository.saveMeta(MaterialMeta.builder()
+                    .materialId(hasCoverId)
+                    .thumbnailKey("covers/existing.jpg")
+                    .createdAt(LocalDateTime.of(2026, 4, 10, 12, 1))
+                    .updatedAt(LocalDateTime.of(2026, 4, 10, 12, 1))
+                    .build());
+
+            Material unavailable = buildMaterial(MaterialStatus.COLLECTED, LocalDateTime.of(2026, 4, 10, 13, 0));
+            unavailable.setSourceUrl("https://example.com/unavailable");
+            Long unavailableId = materialRepository.saveMaterial(unavailable);
+            materialRepository.saveMeta(MaterialMeta.builder()
+                    .materialId(unavailableId)
+                    .extraJson("{\"coverBackfillStatus\":\"unavailable\"}")
+                    .createdAt(LocalDateTime.of(2026, 4, 10, 13, 1))
+                    .updatedAt(LocalDateTime.of(2026, 4, 10, 13, 1))
+                    .build());
+
+            Material invalid = buildMaterial(MaterialStatus.INVALID, LocalDateTime.of(2026, 4, 10, 14, 0));
+            invalid.setSourceUrl("https://example.com/invalid");
+            materialRepository.saveMaterial(invalid);
+
+            assertThat(materialRepository.findMaterialsMissingThumbnail(20))
+                    .extracting(Material::getId)
+                    .containsExactly(targetId);
+        }
+    }
+
+    @Nested
     @DisplayName("last retrieved at")
     class LastRetrievedAt {
 
