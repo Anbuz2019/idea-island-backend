@@ -3,6 +3,8 @@ package com.anbuz.trigger.http;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.anbuz.api.http.IMaterialController;
+import com.anbuz.domain.content.model.UrlPreviewMetadata;
+import com.anbuz.domain.content.service.IContentProcessService;
 import com.anbuz.domain.material.model.valobj.MaterialListQuery;
 import com.anbuz.domain.material.service.IMaterialService;
 import com.anbuz.trigger.auth.UserContext;
@@ -16,7 +18,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 资料 HTTP 适配器，负责把资料请求转换为资料域服务调用并组织 API 响应。
@@ -27,6 +31,7 @@ import java.util.List;
 public class MaterialController implements IMaterialController {
 
     private final IMaterialService materialService;
+    private final IContentProcessService contentProcessService;
 
     @Override
     public Result<MaterialPageResponse> list(@Valid ListMaterialsRequest request) {
@@ -73,6 +78,31 @@ public class MaterialController implements IMaterialController {
                 .build());
         log.info("Submit material succeeded userId={} topicId={} materialId={}", userId, req.getTopicId(), materialId);
         return Result.ok(materialId);
+    }
+
+    @Override
+    public Result<LinkPreviewResponse> previewLink(String url) {
+        Long userId = UserContext.currentUserId();
+        String normalizedUrl = normalizeUrl(url);
+        log.info("Preview material link requested userId={} url={}", userId, normalizedUrl);
+        Optional<UrlPreviewMetadata> metadata = contentProcessService.previewUrl(normalizedUrl);
+        LinkPreviewResponse response = new LinkPreviewResponse();
+        response.setUrl(normalizedUrl);
+        response.setMaterialType(inferMaterialType(normalizedUrl));
+        if (metadata.isPresent()) {
+            UrlPreviewMetadata preview = metadata.get();
+            response.setTitle(preview.title());
+            response.setDescription(preview.description());
+            response.setImageUrl(preview.imageUrl());
+            response.setAuthor(preview.author());
+            response.setSourcePlatform(preview.sourcePlatform());
+        }
+        if (response.getSourcePlatform() == null || response.getSourcePlatform().isBlank()) {
+            response.setSourcePlatform(inferSourcePlatform(normalizedUrl));
+        }
+        log.info("Preview material link completed userId={} titlePresent={} coverPresent={}",
+                userId, response.getTitle() != null, response.getImageUrl() != null);
+        return Result.ok(response);
     }
 
     @Override
@@ -201,6 +231,46 @@ public class MaterialController implements IMaterialController {
             return JSON.parseObject(tagFilters, new TypeReference<>() {});
         } catch (Exception e) {
             throw new AppException(ErrorCode.PARAM_INVALID, "tagFilters 格式非法");
+        }
+    }
+
+    private String normalizeUrl(String url) {
+        if (url == null || url.isBlank()) {
+            throw new AppException(ErrorCode.PARAM_INVALID, "链接不能为空");
+        }
+        String trimmed = url.trim();
+        if (!trimmed.startsWith("http://") && !trimmed.startsWith("https://")) {
+            throw new AppException(ErrorCode.PARAM_INVALID, "链接格式不正确");
+        }
+        return trimmed;
+    }
+
+    private String inferMaterialType(String url) {
+        String lowerUrl = url.toLowerCase();
+        if (lowerUrl.contains("bilibili.com/video/")
+                || lowerUrl.contains("b23.tv/")
+                || lowerUrl.matches(".*\\.(mp4|mov|m4v|webm)(\\?.*)?$")) {
+            return "media";
+        }
+        if (lowerUrl.matches(".*\\.(jpg|jpeg|png|gif|webp|bmp)(\\?.*)?$")) {
+            return "image";
+        }
+        return "article";
+    }
+
+    private String inferSourcePlatform(String url) {
+        try {
+            String host = URI.create(url).getHost();
+            if (host == null || host.isBlank()) {
+                return null;
+            }
+            String lowerHost = host.toLowerCase();
+            if (lowerHost.endsWith("bilibili.com") || lowerHost.endsWith("b23.tv")) {
+                return "哔哩哔哩";
+            }
+            return lowerHost.replaceFirst("^www\\.", "");
+        } catch (Exception ignored) {
+            return null;
         }
     }
 }

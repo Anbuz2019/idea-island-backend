@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -44,6 +45,10 @@ public interface IMaterialController {
     @Operation(summary = "提交资料", description = "提交文章、社交内容、媒体、图片、摘录或手输资料，初始状态为收件箱")
     @PostMapping
     Result<Long> submit(@Valid @RequestBody SubmitRequest req);
+
+    @Operation(summary = "预览分享链接", description = "根据 URL 提前提取标题、摘要、作者、平台和封面，用于快速采集预填")
+    @GetMapping("/link-preview")
+    Result<LinkPreviewResponse> previewLink(@Parameter(description = "资料链接", required = true) @RequestParam String url);
 
     @Operation(summary = "查询资料详情", description = "返回资料基本信息、元信息、标签和状态历史")
     @GetMapping("/{id}")
@@ -174,6 +179,25 @@ public interface IMaterialController {
         @Valid
         @Size(max = 100)
         private List<UpdateTagsRequest.TagItem> tags;
+    }
+
+    @Schema(description = "分享链接预览结果")
+    @Data
+    class LinkPreviewResponse {
+        @Schema(description = "规范化后的链接")
+        private String url;
+        @Schema(description = "推断的资料类型")
+        private String materialType;
+        @Schema(description = "标题")
+        private String title;
+        @Schema(description = "摘要")
+        private String description;
+        @Schema(description = "封面图片 URL")
+        private String imageUrl;
+        @Schema(description = "作者")
+        private String author;
+        @Schema(description = "来源平台")
+        private String sourcePlatform;
     }
 
     @Schema(description = "编辑资料基本信息请求")

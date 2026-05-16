@@ -99,6 +99,11 @@ public class ContentProcessService implements IContentProcessService {
         return processed;
     }
 
+    @Override
+    public Optional<UrlPreviewMetadata> previewUrl(String url) {
+        return Optional.ofNullable(ensurePreviewLoaded(url, null));
+    }
+
     private UrlPreviewMetadata populateThumbnail(
             Material material, MaterialMeta meta, UrlPreviewMetadata preview, boolean markUnavailableWhenMissingCover) {
         if (material.getMaterialType() == MaterialType.IMAGE && hasText(material.getFileKey())) {
