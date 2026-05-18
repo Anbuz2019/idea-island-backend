@@ -67,6 +67,21 @@
         WHERE id = #{id}
     </update>
 
+    <update id="moveToTopicInbox">
+        UPDATE material
+        SET topic_id = #{topicId},
+            status = 'INBOX',
+            inbox_at = #{inboxAt},
+            inbox_read_at = NULL,
+            collected_at = NULL,
+            collected_read_at = NULL,
+            archived_at = NULL,
+            invalid_at = NULL,
+            invalid_reason = NULL,
+            updated_at = #{updatedAt}
+        WHERE id = #{id}
+    </update>
+
     <delete id="deleteById">
         DELETE FROM material WHERE id = #{id}
     </delete>

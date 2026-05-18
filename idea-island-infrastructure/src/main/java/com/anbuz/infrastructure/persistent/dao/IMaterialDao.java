@@ -21,6 +21,12 @@ public interface IMaterialDao {
 
     void update(MaterialPO material);
 
+    void moveToTopicInbox(
+            @Param("id") Long id,
+            @Param("topicId") Long topicId,
+            @Param("inboxAt") LocalDateTime inboxAt,
+            @Param("updatedAt") LocalDateTime updatedAt);
+
     void deleteById(@Param("id") Long id);
 
     void clearInvalidation(@Param("id") Long id, @Param("updatedAt") LocalDateTime updatedAt);

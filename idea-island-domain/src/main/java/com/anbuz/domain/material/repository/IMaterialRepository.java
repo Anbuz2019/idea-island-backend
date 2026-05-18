@@ -24,6 +24,8 @@ public interface IMaterialRepository {
 
     void updateMaterial(Material material);
 
+    void moveToTopicInbox(Long materialId, Long targetTopicId, LocalDateTime inboxAt, LocalDateTime updatedAt);
+
     void deletePermanently(Long materialId);
 
     void clearInvalidation(Long materialId, LocalDateTime updatedAt);

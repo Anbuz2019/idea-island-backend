@@ -57,6 +57,11 @@ public class MaterialRepository implements IMaterialRepository {
     }
 
     @Override
+    public void moveToTopicInbox(Long materialId, Long targetTopicId, LocalDateTime inboxAt, LocalDateTime updatedAt) {
+        materialDao.moveToTopicInbox(materialId, targetTopicId, inboxAt, updatedAt);
+    }
+
+    @Override
     public void deletePermanently(Long materialId) {
         materialTagDao.deleteByMaterialId(materialId);
         materialMetaDao.deleteByMaterialId(materialId);

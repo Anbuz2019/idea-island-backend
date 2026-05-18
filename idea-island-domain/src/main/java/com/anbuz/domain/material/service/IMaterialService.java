@@ -31,6 +31,8 @@ public interface IMaterialService {
 
     MaterialAggregate updateMeta(Long userId, Long materialId, UpdateMetaCommand command);
 
+    void moveToTopicInbox(Long userId, Long materialId, Long targetTopicId);
+
     void deleteMaterial(Long userId, Long materialId);
 
     void updateTags(Long userId, Long materialId, List<TagInput> tags);

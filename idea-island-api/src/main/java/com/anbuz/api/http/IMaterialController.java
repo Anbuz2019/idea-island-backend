@@ -94,6 +94,10 @@ public interface IMaterialController {
     @PostMapping("/{id}/restore-collected")
     Result<Void> restoreCollected(@Parameter(description = "资料 ID", required = true) @PathVariable Long id);
 
+    @Operation(summary = "更换资料主题", description = "将资料移动到目标主题的收件箱，清空用户标签，并保留评分、评语和元数据")
+    @PostMapping("/{id}/move-topic")
+    Result<Void> moveToTopicInbox(@Parameter(description = "资料 ID", required = true) @PathVariable Long id,
+                                  @Valid @RequestBody MoveTopicRequest req);
     @Operation(summary = "覆盖更新资料标签", description = "以请求中的用户标签全量替换资料当前用户标签，并刷新系统标签")
     @PutMapping("/{id}/tags")
     Result<Void> updateTags(@Parameter(description = "资料 ID", required = true) @PathVariable Long id,
@@ -272,7 +276,14 @@ public interface IMaterialController {
         private String invalidReason;
     }
 
-    @Schema(description = "覆盖更新标签请求")
+    @Schema(description = "更换资料主题请求")
+    @Data
+    class MoveTopicRequest {
+        @Schema(description = "目标主题 ID", example = "2")
+        @NotNull
+        private Long targetTopicId;
+    }
+    @Schema(description = "覆盖更新资料标签请求")
     @Data
     class UpdateTagsRequest {
         @Schema(description = "用户标签列表")

@@ -209,6 +209,13 @@ public class MaterialController implements IMaterialController {
     }
 
     @Override
+    public Result<Void> moveToTopicInbox(@PathVariable Long id, @Valid @RequestBody MoveTopicRequest req) {
+        Long userId = UserContext.currentUserId();
+        materialService.moveToTopicInbox(userId, id, req.getTargetTopicId());
+        log.info("Move material to topic inbox succeeded userId={} materialId={} targetTopicId={}", userId, id, req.getTargetTopicId());
+        return Result.ok();
+    }
+    @Override
     public Result<Void> updateTags(@PathVariable Long id, @Valid @RequestBody UpdateTagsRequest req) {
         Long userId = UserContext.currentUserId();
         materialService.updateTags(userId, id, toTagInputs(req.getTags()));

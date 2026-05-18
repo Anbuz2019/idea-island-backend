@@ -254,6 +254,29 @@ public class MaterialService implements IMaterialService {
 
     @Override
     @Transactional
+    public void moveToTopicInbox(Long userId, Long materialId, Long targetTopicId) {
+        Material material = getOwnedMaterial(materialId, userId);
+        Topic targetTopic = getOwnedTopic(targetTopicId, userId);
+        if (!targetTopic.isEnabled()) {
+            log.warn("Move material rejected due to disabled target topic userId={} materialId={} targetTopicId={}",
+                    userId, materialId, targetTopicId);
+            throw new AppException(ErrorCode.BUSINESS_CONFLICT, "目标主题已停用，无法移动资料");
+        }
+
+        Long sourceTopicId = material.getTopicId();
+        LocalDateTime now = LocalDateTime.now();
+        materialRepository.moveToTopicInbox(materialId, targetTopicId, now, now);
+        materialRepository.deleteTags(materialId);
+        if (!targetTopicId.equals(sourceTopicId)) {
+            decrementTopicMaterialCount(sourceTopicId, now);
+            incrementTopicMaterialCount(targetTopic, now);
+        }
+        log.info("Move material to topic inbox succeeded userId={} materialId={} fromTopicId={} targetTopicId={}",
+                userId, materialId, sourceTopicId, targetTopicId);
+    }
+
+    @Override
+    @Transactional
     public void deleteMaterial(Long userId, Long materialId) {
         Material material = getOwnedMaterial(materialId, userId);
         if (material.getStatus() != MaterialStatus.INVALID) {
@@ -559,6 +582,13 @@ public class MaterialService implements IMaterialService {
             topic.setUpdatedAt(now);
             topicRepository.updateTopic(topic);
         });
+    }
+
+    private void incrementTopicMaterialCount(Topic topic, LocalDateTime now) {
+        int currentCount = topic.getMaterialCount() == null ? 0 : topic.getMaterialCount();
+        topic.setMaterialCount(currentCount + 1);
+        topic.setUpdatedAt(now);
+        topicRepository.updateTopic(topic);
     }
 
 }
