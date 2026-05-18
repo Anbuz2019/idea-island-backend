@@ -1,4 +1,4 @@
-version: "3.9"
+name: idea-island
 
 services:
 
@@ -17,6 +17,8 @@ services:
       - ./docs/sql/tables_xxl_job.sql:/docker-entrypoint-initdb.d/02-xxl-job.sql:ro
     ports:
       - "3306:3306"
+    networks:
+      - default
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -32,6 +34,8 @@ services:
       - redis_data:/data
     ports:
       - "6379:6379"
+    networks:
+      - default
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
@@ -50,6 +54,8 @@ services:
         --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN}
     ports:
       - "9090:8080"
+    networks:
+      - default
     depends_on:
       mysql:
         condition: service_healthy
@@ -70,6 +76,8 @@ services:
       XXL_JOB_ADMIN_URL: http://xxl-job-admin:8080/xxl-job-admin
     ports:
       - "8091:8091"
+    networks:
+      - default
     depends_on:
       mysql:
         condition: service_healthy
@@ -99,3 +107,7 @@ volumes:
     name: ${APP_LOGS_VOLUME_NAME:-idea-island-backend_app_logs}
   app_data_logs:
     name: ${APP_DATA_LOGS_VOLUME_NAME:-idea-island-backend_app_data_logs}
+
+networks:
+  default:
+    name: idea-island_default

@@ -78,6 +78,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoResourceFoundException.class)
     public Result<Void> handleNoResource(HttpServletRequest request, NoResourceFoundException e) {
+        if (request.getRequestURI().startsWith("/api/")) {
+            log.warn("No API route matched path={} method={} resource={}",
+                    request.getRequestURI(), request.getMethod(), e.getResourcePath());
+            return Result.fail(ErrorCode.NOT_FOUND.getCode(), "接口不存在: " + request.getRequestURI());
+        }
         log.debug("No static resource path={} resource={}", request.getRequestURI(), e.getResourcePath());
         return Result.fail(ErrorCode.NOT_FOUND);
     }

@@ -255,8 +255,30 @@ public class MaterialService implements IMaterialService {
     @Override
     @Transactional
     public void moveToTopicInbox(Long userId, Long materialId, Long targetTopicId) {
-        Material material = getOwnedMaterial(materialId, userId);
-        Topic targetTopic = getOwnedTopic(targetTopicId, userId);
+        log.info("Move material to topic requested userId={} materialId={} targetTopicId={}",
+                userId, materialId, targetTopicId);
+        Material material = materialRepository.findById(materialId)
+                .orElseThrow(() -> {
+                    log.warn("Move material to topic failed: material not found or deleted userId={} materialId={} targetTopicId={}",
+                            userId, materialId, targetTopicId);
+                    return new AppException(ErrorCode.NOT_FOUND, "资料不存在或已删除: " + materialId);
+                });
+        if (!userId.equals(material.getUserId())) {
+            log.warn("Move material to topic failed: material owner mismatch userId={} materialId={} ownerUserId={} targetTopicId={}",
+                    userId, materialId, material.getUserId(), targetTopicId);
+            throw new AppException(ErrorCode.FORBIDDEN, "资料不属于当前用户: " + materialId);
+        }
+        Topic targetTopic = topicRepository.findTopicById(targetTopicId)
+                .orElseThrow(() -> {
+                    log.warn("Move material to topic failed: target topic not found userId={} materialId={} targetTopicId={}",
+                            userId, materialId, targetTopicId);
+                    return new AppException(ErrorCode.NOT_FOUND, "目标主题不存在: " + targetTopicId);
+                });
+        if (!userId.equals(targetTopic.getUserId())) {
+            log.warn("Move material to topic failed: target topic owner mismatch userId={} materialId={} targetTopicId={} topicOwnerUserId={}",
+                    userId, materialId, targetTopicId, targetTopic.getUserId());
+            throw new AppException(ErrorCode.FORBIDDEN, "目标主题不属于当前用户: " + targetTopicId);
+        }
         if (!targetTopic.isEnabled()) {
             log.warn("Move material rejected due to disabled target topic userId={} materialId={} targetTopicId={}",
                     userId, materialId, targetTopicId);
